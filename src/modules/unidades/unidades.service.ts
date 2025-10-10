@@ -1,0 +1,84 @@
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Unidad } from './entities/unidad.entity';
+import { CreateUnidadDto } from './dto/create-unidad.dto';
+import { UpdateUnidadDto } from './dto/update-unidad.dto';
+
+@Injectable()
+export class UnidadesService {
+  constructor(
+    @InjectRepository(Unidad)
+    private readonly unidadRepository: Repository<Unidad>,
+  ) {}
+
+  async create(createUnidadDto: CreateUnidadDto): Promise<Unidad> {
+    const existingUnidad = await this.unidadRepository.findOne({
+      where: { nombre: createUnidadDto.nombre },
+    });
+
+    if (existingUnidad) {
+      throw new ConflictException('Ya existe una unidad con ese nombre');
+    }
+
+    const unidad = this.unidadRepository.create(createUnidadDto);
+    return await this.unidadRepository.save(unidad);
+  }
+
+  async findAll(): Promise<Unidad[]> {
+    return await this.unidadRepository.find({
+      order: { nombre: 'ASC' },
+    });
+  }
+
+  async findAllActive(): Promise<Unidad[]> {
+    return await this.unidadRepository.find({
+      where: { activo: true },
+      order: { nombre: 'ASC' },
+    });
+  }
+
+  async findOne(id: number): Promise<Unidad> {
+    const unidad = await this.unidadRepository.findOne({
+      where: { id_unidad: id },
+    });
+
+    if (!unidad) {
+      throw new NotFoundException(`Unidad con ID ${id} no encontrada`);
+    }
+
+    return unidad;
+  }
+
+  async update(id: number, updateUnidadDto: UpdateUnidadDto): Promise<Unidad> {
+    const unidad = await this.findOne(id);
+
+    if (updateUnidadDto.nombre && updateUnidadDto.nombre !== unidad.nombre) {
+      const existingUnidad = await this.unidadRepository.findOne({
+        where: { nombre: updateUnidadDto.nombre },
+      });
+
+      if (existingUnidad) {
+        throw new ConflictException('Ya existe una unidad con ese nombre');
+      }
+    }
+
+    Object.assign(unidad, updateUnidadDto);
+    return await this.unidadRepository.save(unidad);
+  }
+
+  async remove(id: number): Promise<void> {
+    const unidad = await this.findOne(id);
+    await this.unidadRepository.remove(unidad);
+  }
+
+  async toggleActive(id: number): Promise<Unidad> {
+    const unidad = await this.findOne(id);
+    unidad.activo = !unidad.activo;
+    return await this.unidadRepository.save(unidad);
+  }
+}

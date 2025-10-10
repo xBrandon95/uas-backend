@@ -1,0 +1,87 @@
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Conductor } from './entities/conductor.entity';
+import { CreateConductorDto } from './dto/create-conductor.dto';
+import { UpdateConductorDto } from './dto/update-conductor.dto';
+
+@Injectable()
+export class ConductoresService {
+  constructor(
+    @InjectRepository(Conductor)
+    private readonly conductorRepository: Repository<Conductor>,
+  ) {}
+
+  async create(createConductorDto: CreateConductorDto): Promise<Conductor> {
+    const existingConductor = await this.conductorRepository.findOne({
+      where: { ci: createConductorDto.ci },
+    });
+
+    if (existingConductor) {
+      throw new ConflictException('Ya existe un conductor con ese CI');
+    }
+
+    const conductor = this.conductorRepository.create(createConductorDto);
+    return await this.conductorRepository.save(conductor);
+  }
+
+  async findAll(): Promise<Conductor[]> {
+    return await this.conductorRepository.find({
+      order: { nombre: 'ASC' },
+    });
+  }
+
+  async findAllActive(): Promise<Conductor[]> {
+    return await this.conductorRepository.find({
+      where: { activo: true },
+      order: { nombre: 'ASC' },
+    });
+  }
+
+  async findOne(id: number): Promise<Conductor> {
+    const conductor = await this.conductorRepository.findOne({
+      where: { id_conductor: id },
+    });
+
+    if (!conductor) {
+      throw new NotFoundException(`Conductor con ID ${id} no encontrado`);
+    }
+
+    return conductor;
+  }
+
+  async update(
+    id: number,
+    updateConductorDto: UpdateConductorDto,
+  ): Promise<Conductor> {
+    const conductor = await this.findOne(id);
+
+    if (updateConductorDto.ci && updateConductorDto.ci !== conductor.ci) {
+      const existingConductor = await this.conductorRepository.findOne({
+        where: { ci: updateConductorDto.ci },
+      });
+
+      if (existingConductor) {
+        throw new ConflictException('Ya existe un conductor con ese CI');
+      }
+    }
+
+    Object.assign(conductor, updateConductorDto);
+    return await this.conductorRepository.save(conductor);
+  }
+
+  async remove(id: number): Promise<void> {
+    const conductor = await this.findOne(id);
+    await this.conductorRepository.remove(conductor);
+  }
+
+  async toggleActive(id: number): Promise<Conductor> {
+    const conductor = await this.findOne(id);
+    conductor.activo = !conductor.activo;
+    return await this.conductorRepository.save(conductor);
+  }
+}

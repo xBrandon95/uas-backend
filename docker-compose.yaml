@@ -1,0 +1,42 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: semillas_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: semillas_db
+      MYSQL_USER: semillas_user
+      MYSQL_PASSWORD: semillas_pass
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - semillas_network
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: semillas_phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: semillas_user
+      PMA_PASSWORD: semillas_pass
+    ports:
+      - '8080:80'
+    depends_on:
+      - mysql
+    networks:
+      - semillas_network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  semillas_network:
+    driver: bridge
