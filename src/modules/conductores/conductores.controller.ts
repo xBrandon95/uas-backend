@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { ConductoresService } from './conductores.service';
 import { CreateConductorDto } from './dto/create-conductor.dto';
@@ -19,6 +20,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/roles.enum';
 import { Conductor } from './entities/conductor.entity';
+import { PaginationDto } from '../cooperadores/dto/pagination.dto';
 
 @Controller('conductores')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -33,8 +35,8 @@ export class ConductoresController {
 
   @Get()
   @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
-  findAll(): Promise<Conductor[]> {
-    return this.conductoresService.findAll();
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.conductoresService.findAll(paginationDto);
   }
 
   @Get('activos')

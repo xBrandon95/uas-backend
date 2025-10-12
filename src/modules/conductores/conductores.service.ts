@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { Conductor } from './entities/conductor.entity';
 import { CreateConductorDto } from './dto/create-conductor.dto';
 import { UpdateConductorDto } from './dto/update-conductor.dto';
+import { PaginationDto } from '../cooperadores/dto/pagination.dto';
 
 @Injectable()
 export class ConductoresService {
@@ -29,10 +30,40 @@ export class ConductoresService {
     return await this.conductorRepository.save(conductor);
   }
 
-  async findAll(): Promise<Conductor[]> {
-    return await this.conductorRepository.find({
-      order: { nombre: 'ASC' },
-    });
+  async findAll(paginationDto: PaginationDto) {
+    const { search = '', page = 1, limit = 10 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder =
+      this.conductorRepository.createQueryBuilder('conductor');
+
+    // Búsqueda por nombre o CI
+    if (search.trim()) {
+      const searchTerm = `%${search.trim()}%`;
+      queryBuilder.andWhere(
+        '(conductor.nombre LIKE :search OR conductor.ci LIKE :search)',
+        { search: searchTerm },
+      );
+    }
+    // Orden alfabético por nombre
+    queryBuilder.orderBy('conductor.nombre', 'DESC');
+    // Paginación
+    queryBuilder.skip(skip).take(limit);
+
+    const [data, total] = await queryBuilder.getManyAndCount();
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
   }
 
   async findAllActive(): Promise<Conductor[]> {

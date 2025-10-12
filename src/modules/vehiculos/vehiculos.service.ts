@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { Vehiculo } from './entities/vehiculo.entity';
 import { CreateVehiculoDto } from './dto/create-vehiculo.dto';
 import { UpdateVehiculoDto } from './dto/update-vehiculo.dto';
+import { PaginationDto } from '../cooperadores/dto/pagination.dto';
 
 @Injectable()
 export class VehiculosService {
@@ -29,10 +30,38 @@ export class VehiculosService {
     return await this.vehiculoRepository.save(vehiculo);
   }
 
-  async findAll(): Promise<Vehiculo[]> {
-    return await this.vehiculoRepository.find({
-      order: { placa: 'ASC' },
-    });
+  async findAll(paginationDto: PaginationDto) {
+    const { search = '', page = 1, limit = 10 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.vehiculoRepository.createQueryBuilder('vehiculo');
+
+    // Búsqueda por placa, marca o modelo
+    if (search.trim()) {
+      const searchTerm = `%${search.trim()}%`;
+      queryBuilder.andWhere(
+        '(vehiculo.placa LIKE :search OR vehiculo.marca LIKE :search OR vehiculo.modelo LIKE :search)',
+        { search: searchTerm },
+      );
+    }
+
+    queryBuilder.orderBy('vehiculo.id_vehiculo', 'DESC');
+    queryBuilder.skip(skip).take(limit);
+
+    const [data, total] = await queryBuilder.getManyAndCount();
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
   }
 
   async findAllActive(): Promise<Vehiculo[]> {

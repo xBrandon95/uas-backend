@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { Semillera } from './entities/semillera.entity';
 import { CreateSemilleraDto } from './dto/create-semillera.dto';
 import { UpdateSemilleraDto } from './dto/update-semillera.dto';
+import { PaginationDto } from '../cooperadores/dto/pagination.dto';
 
 @Injectable()
 export class SemillerasService {
@@ -29,10 +30,44 @@ export class SemillerasService {
     return await this.semilleraRepository.save(semillera);
   }
 
-  async findAll(): Promise<Semillera[]> {
-    return await this.semilleraRepository.find({
-      order: { nombre: 'ASC' },
-    });
+  async findAll(paginationDto: PaginationDto) {
+    const { search = '', page = 1, limit = 10 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder =
+      this.semilleraRepository.createQueryBuilder('semillera');
+
+    // Búsqueda por nombre
+    if (search.trim()) {
+      const searchTerm = `%${search.trim()}%`;
+      queryBuilder.andWhere(
+        '(semillera.nombre LIKE :search OR semillera.ubicacion LIKE :search)',
+        {
+          search: searchTerm,
+        },
+      );
+    }
+
+    // Orden descendente por id
+    queryBuilder.orderBy('semillera.id_semillera', 'DESC');
+
+    // Paginación
+    queryBuilder.skip(skip).take(limit);
+
+    const [data, total] = await queryBuilder.getManyAndCount();
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
   }
 
   async findAllActive(): Promise<Semillera[]> {

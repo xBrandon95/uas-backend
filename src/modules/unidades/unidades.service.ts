@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { Unidad } from './entities/unidad.entity';
 import { CreateUnidadDto } from './dto/create-unidad.dto';
 import { UpdateUnidadDto } from './dto/update-unidad.dto';
+import { PaginationDto } from '../cooperadores/dto/pagination.dto';
 
 @Injectable()
 export class UnidadesService {
@@ -29,10 +30,40 @@ export class UnidadesService {
     return await this.unidadRepository.save(unidad);
   }
 
-  async findAll(): Promise<Unidad[]> {
-    return await this.unidadRepository.find({
-      order: { nombre: 'ASC' },
-    });
+  async findAll(paginationDto: PaginationDto) {
+    const { search = '', page = 1, limit = 10 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.unidadRepository.createQueryBuilder('unidad');
+
+    if (search.trim()) {
+      const searchTerm = `%${search.trim()}%`;
+      queryBuilder.andWhere(
+        '(unidad.nombre LIKE :search OR unidad.ubicacion LIKE :search)',
+        { search: searchTerm },
+      );
+    }
+
+    // Orden descendente por id
+    queryBuilder.orderBy('unidad.id_unidad', 'DESC');
+
+    // Paginación
+    queryBuilder.skip(skip).take(limit);
+
+    const [data, total] = await queryBuilder.getManyAndCount();
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
   }
 
   async findAllActive(): Promise<Unidad[]> {

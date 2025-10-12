@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { CategoriasService } from './categorias.service';
 import { CreateCategoriaDto } from './dto/create-categoria.dto';
@@ -19,6 +20,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/roles.enum';
 import { Categoria } from './entities/categoria.entity';
+import { PaginationDto } from '../cooperadores/dto/pagination.dto';
 
 @Controller('categorias')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -33,8 +35,8 @@ export class CategoriasController {
 
   @Get()
   @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
-  findAll(): Promise<Categoria[]> {
-    return this.categoriasService.findAll();
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.categoriasService.findAll(paginationDto);
   }
 
   @Get('activas')

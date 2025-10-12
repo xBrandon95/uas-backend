@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { VehiculosService } from './vehiculos.service';
 import { CreateVehiculoDto } from './dto/create-vehiculo.dto';
@@ -19,6 +20,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/roles.enum';
 import { Vehiculo } from './entities/vehiculo.entity';
+import { PaginationDto } from '../cooperadores/dto/pagination.dto';
 
 @Controller('vehiculos')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -33,8 +35,8 @@ export class VehiculosController {
 
   @Get()
   @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
-  findAll(): Promise<Vehiculo[]> {
-    return this.vehiculosService.findAll();
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.vehiculosService.findAll(paginationDto);
   }
 
   @Get('activos')

@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { SemillerasService } from './semilleras.service';
 import { CreateSemilleraDto } from './dto/create-semillera.dto';
@@ -19,6 +20,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/roles.enum';
 import { Semillera } from './entities/semillera.entity';
+import { PaginationDto } from '../cooperadores/dto/pagination.dto';
 
 @Controller('semilleras')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -33,8 +35,8 @@ export class SemillerasController {
 
   @Get()
   @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
-  findAll(): Promise<Semillera[]> {
-    return this.semillerasService.findAll();
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.semillerasService.findAll(paginationDto);
   }
 
   @Get('activas')
