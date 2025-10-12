@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { Semilla } from './entities/semilla.entity';
 import { CreateSemillaDto } from './dto/create-semilla.dto';
 import { UpdateSemillaDto } from './dto/update-semilla.dto';
+import { PaginationDto } from '../cooperadores/dto/pagination.dto';
 
 @Injectable()
 export class SemillasService {
@@ -29,10 +30,40 @@ export class SemillasService {
     return await this.semillaRepository.save(semilla);
   }
 
-  async findAll(): Promise<Semilla[]> {
-    return await this.semillaRepository.find({
-      order: { nombre: 'ASC' },
-    });
+  async findAll(paginationDto: PaginationDto) {
+    const { search = '', page = 1, limit = 10 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.semillaRepository.createQueryBuilder('semilla');
+
+    // Búsqueda por nombre
+    if (search.trim()) {
+      const searchTerm = `%${search.trim()}%`;
+      queryBuilder.andWhere('semilla.nombre LIKE :search', {
+        search: searchTerm,
+      });
+    }
+
+    // Orden descendente por id
+    queryBuilder.orderBy('semilla.id_semilla', 'DESC');
+
+    // Paginación
+    queryBuilder.skip(skip).take(limit);
+
+    const [data, total] = await queryBuilder.getManyAndCount();
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
   }
 
   async findAllActive(): Promise<Semilla[]> {

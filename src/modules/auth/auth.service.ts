@@ -29,6 +29,7 @@ export class AuthService {
       sub: usuario.id_usuario,
       usuario: usuario.usuario,
       rol: usuario.rol,
+      id_unidad: usuario.id_unidad,
     };
 
     return {
@@ -42,6 +43,7 @@ export class AuthService {
         nombre: usuario.nombre,
         usuario: usuario.usuario,
         rol: usuario.rol,
+        id_unidad: usuario.id_unidad,
       },
     };
   }
@@ -53,6 +55,7 @@ export class AuthService {
       sub: usuario.id_usuario,
       usuario: usuario.usuario,
       rol: usuario.rol,
+      id_unidad: usuario.id_unidad, // NUEVO
     };
 
     return {
@@ -66,6 +69,7 @@ export class AuthService {
         nombre: usuario.nombre,
         usuario: usuario.usuario,
         rol: usuario.rol,
+        id_unidad: usuario.id_unidad, // NUEVO
       },
     };
   }
@@ -80,6 +84,7 @@ export class AuthService {
         sub: payload.sub,
         usuario: payload.usuario,
         rol: payload.rol,
+        id_unidad: payload.id_unidad, // NUEVO
       };
 
       return {

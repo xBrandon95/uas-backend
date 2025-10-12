@@ -24,9 +24,6 @@ export class Variedad {
   @Column({ length: 100 })
   nombre: string;
 
-  @Column({ length: 50, nullable: true })
-  codigo: string;
-
   @Column({ default: true })
   activo: boolean;
 

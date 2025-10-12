@@ -17,11 +17,6 @@ export class CreateVariedadDto {
   @MaxLength(100)
   nombre: string;
 
-  @IsString()
-  @IsOptional()
-  @MaxLength(50)
-  codigo?: string;
-
   @IsBoolean()
   @IsOptional()
   activo?: boolean;

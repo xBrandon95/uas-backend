@@ -37,19 +37,28 @@ export class OrdenesIngresoController {
     return this.ordenesIngresoService.create(
       createOrdenIngresoDto,
       user.id_usuario,
+      user.rol,
+      user.id_unidad,
     );
   }
 
   @Get()
   @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
-  findAll(): Promise<OrdenIngreso[]> {
-    return this.ordenesIngresoService.findAll();
+  findAll(@CurrentUser() user: AuthenticatedUser): Promise<OrdenIngreso[]> {
+    return this.ordenesIngresoService.findAll(user.rol, user.id_unidad);
   }
 
   @Get('estado/:estado')
   @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
-  findByEstado(@Param('estado') estado: string): Promise<OrdenIngreso[]> {
-    return this.ordenesIngresoService.findByEstado(estado);
+  findByEstado(
+    @Param('estado') estado: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<OrdenIngreso[]> {
+    return this.ordenesIngresoService.findByEstado(
+      estado,
+      user.rol,
+      user.id_unidad,
+    );
   }
 
   @Get('unidad/:idUnidad')
@@ -74,8 +83,15 @@ export class OrdenesIngresoController {
 
   @Get('estadisticas')
   @Roles(Role.ADMIN, Role.ENCARGADO)
-  getEstadisticas(@Query('idUnidad') idUnidad?: number): Promise<any> {
-    return this.ordenesIngresoService.getEstadisticas(idUnidad);
+  getEstadisticas(
+    @Query('idUnidad') idUnidad: number,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<any> {
+    return this.ordenesIngresoService.getEstadisticas(
+      idUnidad,
+      user.rol,
+      user.id_unidad,
+    );
   }
 
   @Get('numero/:numeroOrden')
@@ -88,8 +104,11 @@ export class OrdenesIngresoController {
 
   @Get(':id')
   @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
-  findOne(@Param('id', ParseIntPipe) id: number): Promise<OrdenIngreso> {
-    return this.ordenesIngresoService.findOne(id);
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<OrdenIngreso> {
+    return this.ordenesIngresoService.findOne(id, user.rol, user.id_unidad);
   }
 
   @Patch(':id')
@@ -97,8 +116,14 @@ export class OrdenesIngresoController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateOrdenIngresoDto: UpdateOrdenIngresoDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<OrdenIngreso> {
-    return this.ordenesIngresoService.update(id, updateOrdenIngresoDto);
+    return this.ordenesIngresoService.update(
+      id,
+      updateOrdenIngresoDto,
+      user.rol,
+      user.id_unidad,
+    );
   }
 
   @Patch(':id/estado')
@@ -106,14 +131,23 @@ export class OrdenesIngresoController {
   cambiarEstado(
     @Param('id', ParseIntPipe) id: number,
     @Body('estado') estado: string,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<OrdenIngreso> {
-    return this.ordenesIngresoService.cambiarEstado(id, estado);
+    return this.ordenesIngresoService.cambiarEstado(
+      id,
+      estado,
+      user.rol,
+      user.id_unidad,
+    );
   }
 
   @Delete(':id')
   @Roles(Role.ADMIN, Role.ENCARGADO)
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.ordenesIngresoService.remove(id);
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<void> {
+    return this.ordenesIngresoService.remove(id, user.rol, user.id_unidad);
   }
 }

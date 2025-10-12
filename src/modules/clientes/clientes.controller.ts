@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { ClientesService } from './clientes.service';
 import { CreateClienteDto } from './dto/create-cliente.dto';
@@ -19,6 +20,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/roles.enum';
 import { Cliente } from './entities/cliente.entity';
+import { PaginationDto } from '../cooperadores/dto/pagination.dto';
 
 @Controller('clientes')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -33,8 +35,8 @@ export class ClientesController {
 
   @Get()
   @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
-  findAll(): Promise<Cliente[]> {
-    return this.clientesService.findAll();
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.clientesService.findAll(paginationDto);
   }
 
   @Get('activos')

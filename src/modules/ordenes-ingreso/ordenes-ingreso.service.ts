@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
@@ -9,6 +10,7 @@ import { OrdenIngreso } from './entities/orden-ingreso.entity';
 import { CreateOrdenIngresoDto } from './dto/create-orden-ingreso.dto';
 import { UpdateOrdenIngresoDto } from './dto/update-orden-ingreso.dto';
 import { LoteProduccion } from '../lotes-produccion/entities/lote-produccion.entity';
+import { Role } from 'src/common/enums/roles.enum';
 
 @Injectable()
 export class OrdenesIngresoService {
@@ -22,7 +24,17 @@ export class OrdenesIngresoService {
   async create(
     createOrdenIngresoDto: CreateOrdenIngresoDto,
     idUsuarioCreador: number,
+    rol: Role,
+    idUnidadUsuario?: number,
   ): Promise<OrdenIngreso> {
+    // Validar que el usuario solo pueda crear en su unidad (excepto admin)
+    if (rol !== Role.ADMIN && idUnidadUsuario) {
+      if (createOrdenIngresoDto.id_unidad !== idUnidadUsuario) {
+        throw new ForbiddenException(
+          'No puedes crear órdenes en otras unidades',
+        );
+      }
+    }
     // Generar número de orden automático
     const numeroOrden = await this.generarNumeroOrden();
 
@@ -36,38 +48,56 @@ export class OrdenesIngresoService {
     return await this.ordenIngresoRepository.save(ordenIngreso);
   }
 
-  async findAll(): Promise<OrdenIngreso[]> {
-    return await this.ordenIngresoRepository.find({
-      relations: [
-        'semillera',
-        'cooperador',
-        'conductor',
-        'vehiculo',
-        'semilla',
-        'variedad',
-        'categoria_ingreso',
-        'unidad',
-        'usuario_creador',
-      ],
-      order: { fecha_creacion: 'DESC' },
-    });
+  async findAll(rol: Role, idUnidadUsuario?: number): Promise<OrdenIngreso[]> {
+    const queryBuilder = this.ordenIngresoRepository
+      .createQueryBuilder('orden')
+      .leftJoinAndSelect('orden.semillera', 'semillera')
+      .leftJoinAndSelect('orden.cooperador', 'cooperador')
+      .leftJoinAndSelect('orden.conductor', 'conductor')
+      .leftJoinAndSelect('orden.vehiculo', 'vehiculo')
+      .leftJoinAndSelect('orden.semilla', 'semilla')
+      .leftJoinAndSelect('orden.variedad', 'variedad')
+      .leftJoinAndSelect('orden.categoria_ingreso', 'categoria_ingreso')
+      .leftJoinAndSelect('orden.unidad', 'unidad')
+      .leftJoinAndSelect('orden.usuario_creador', 'usuario_creador')
+      .orderBy('orden.fecha_creacion', 'DESC');
+
+    // FILTRO POR UNIDAD: Solo admin puede ver todas las unidades
+    if (rol !== Role.ADMIN && idUnidadUsuario) {
+      queryBuilder.where('orden.id_unidad = :idUnidad', {
+        idUnidad: idUnidadUsuario,
+      });
+    }
+
+    return await queryBuilder.getMany();
   }
 
-  async findByEstado(estado: string): Promise<OrdenIngreso[]> {
-    return await this.ordenIngresoRepository.find({
-      where: { estado },
-      relations: [
-        'semillera',
-        'cooperador',
-        'conductor',
-        'vehiculo',
-        'semilla',
-        'variedad',
-        'categoria_ingreso',
-        'unidad',
-      ],
-      order: { fecha_creacion: 'DESC' },
-    });
+  async findByEstado(
+    estado: string,
+    rol: Role,
+    idUnidadUsuario?: number,
+  ): Promise<OrdenIngreso[]> {
+    const queryBuilder = this.ordenIngresoRepository
+      .createQueryBuilder('orden')
+      .leftJoinAndSelect('orden.semillera', 'semillera')
+      .leftJoinAndSelect('orden.cooperador', 'cooperador')
+      .leftJoinAndSelect('orden.conductor', 'conductor')
+      .leftJoinAndSelect('orden.vehiculo', 'vehiculo')
+      .leftJoinAndSelect('orden.semilla', 'semilla')
+      .leftJoinAndSelect('orden.variedad', 'variedad')
+      .leftJoinAndSelect('orden.categoria_ingreso', 'categoria_ingreso')
+      .leftJoinAndSelect('orden.unidad', 'unidad')
+      .where('orden.estado = :estado', { estado })
+      .orderBy('orden.fecha_creacion', 'DESC');
+
+    // FILTRO POR UNIDAD
+    if (rol !== Role.ADMIN && idUnidadUsuario) {
+      queryBuilder.andWhere('orden.id_unidad = :idUnidad', {
+        idUnidad: idUnidadUsuario,
+      });
+    }
+
+    return await queryBuilder.getMany();
   }
 
   async findByUnidad(idUnidad: number): Promise<OrdenIngreso[]> {
@@ -108,8 +138,12 @@ export class OrdenesIngresoService {
     });
   }
 
-  async findOne(id: number): Promise<OrdenIngreso> {
-    const ordenIngreso = await this.ordenIngresoRepository.findOne({
+  async findOne(
+    id: number,
+    rol: Role,
+    idUnidadUsuario?: number,
+  ): Promise<OrdenIngreso> {
+    const orden = await this.ordenIngresoRepository.findOne({
       where: { id_orden_ingreso: id },
       relations: [
         'semillera',
@@ -124,13 +158,22 @@ export class OrdenesIngresoService {
       ],
     });
 
-    if (!ordenIngreso) {
+    if (!orden) {
       throw new NotFoundException(
         `Orden de ingreso con ID ${id} no encontrada`,
       );
     }
 
-    return ordenIngreso;
+    // Validar acceso: Solo admin o usuario de la misma unidad
+    if (
+      rol !== Role.ADMIN &&
+      idUnidadUsuario &&
+      orden.id_unidad !== idUnidadUsuario
+    ) {
+      throw new ForbiddenException('No tienes acceso a esta orden');
+    }
+
+    return orden;
   }
 
   async findByNumeroOrden(numeroOrden: string): Promise<OrdenIngreso> {
@@ -161,8 +204,10 @@ export class OrdenesIngresoService {
   async update(
     id: number,
     updateOrdenIngresoDto: UpdateOrdenIngresoDto,
+    rol: Role,
+    idUnidadUsuario?: number,
   ): Promise<OrdenIngreso> {
-    const ordenIngreso = await this.findOne(id);
+    const ordenIngreso = await this.findOne(id, rol, idUnidadUsuario);
 
     // Validar que la orden esté en estado editable
     if (ordenIngreso.estado === 'completado') {
@@ -175,8 +220,13 @@ export class OrdenesIngresoService {
     return await this.ordenIngresoRepository.save(ordenIngreso);
   }
 
-  async cambiarEstado(id: number, nuevoEstado: string): Promise<OrdenIngreso> {
-    const ordenIngreso = await this.findOne(id);
+  async cambiarEstado(
+    id: number,
+    nuevoEstado: string,
+    rol: Role,
+    idUnidadUsuario?: number,
+  ): Promise<OrdenIngreso> {
+    const ordenIngreso = await this.findOne(id, rol, idUnidadUsuario);
 
     const estadosValidos = [
       'pendiente',
@@ -192,8 +242,8 @@ export class OrdenesIngresoService {
     return await this.ordenIngresoRepository.save(ordenIngreso);
   }
 
-  async remove(id: number): Promise<void> {
-    const ordenIngreso = await this.findOne(id);
+  async remove(id: number, rol: Role, idUnidadUsuario?: number): Promise<void> {
+    const ordenIngreso = await this.findOne(id, rol, idUnidadUsuario);
 
     if (ordenIngreso.estado === 'completado') {
       throw new BadRequestException(
@@ -223,14 +273,23 @@ export class OrdenesIngresoService {
     return `OI-${year}${month}-${secuencial}`;
   }
 
-  async getEstadisticas(idUnidad?: number): Promise<any> {
+  async getEstadisticas(
+    idUnidad?: number,
+    rol?: Role,
+    idUnidadUsuario?: number,
+  ): Promise<any> {
     const queryBuilder = this.ordenIngresoRepository
       .createQueryBuilder('orden')
       .select('orden.estado', 'estado')
       .addSelect('COUNT(orden.id_orden_ingreso)', 'cantidad')
       .addSelect('SUM(orden.peso_neto)', 'peso_total');
 
-    if (idUnidad) {
+    // FILTRO POR UNIDAD: Admin puede filtrar por unidad, otros ven solo la suya
+    if (rol !== Role.ADMIN && idUnidadUsuario) {
+      queryBuilder.where('orden.id_unidad = :idUnidad', {
+        idUnidad: idUnidadUsuario,
+      });
+    } else if (idUnidad) {
       queryBuilder.where('orden.id_unidad = :idUnidad', { idUnidad });
     }
 
@@ -241,11 +300,16 @@ export class OrdenesIngresoService {
     return estadisticas;
   }
 
-  async getResumenProduccion(idOrdenIngreso: number): Promise<any> {
-    const ordenIngreso = await this.findOne(idOrdenIngreso);
+  async getResumenProduccion(
+    id: number,
+    rol: Role,
+    idUnidadUsuario?: number,
+  ): Promise<any> {
+    // const ordenIngreso = await this.findOne(idOrdenIngreso);
+    const ordenIngreso = await this.findOne(id, rol, idUnidadUsuario);
 
     const lotes = await this.loteProduccionRepository.find({
-      where: { id_orden_ingreso: idOrdenIngreso },
+      where: { id_orden_ingreso: id },
     });
 
     const totalKgProducido = lotes.reduce(

@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Cliente } from './entities/cliente.entity';
 import { CreateClienteDto } from './dto/create-cliente.dto';
 import { UpdateClienteDto } from './dto/update-cliente.dto';
+import { PaginationDto } from '../cooperadores/dto/pagination.dto';
 
 @Injectable()
 export class ClientesService {
@@ -17,10 +18,45 @@ export class ClientesService {
     return await this.clienteRepository.save(cliente);
   }
 
-  async findAll(): Promise<Cliente[]> {
-    return await this.clienteRepository.find({
-      order: { nombre: 'ASC' },
-    });
+  async findAll(paginationDto: PaginationDto) {
+    const { search = '', page = 1, limit = 10 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.clienteRepository.createQueryBuilder('cliente');
+
+    // Búsqueda por nombre, nit, teléfono o dirección
+    if (search.trim()) {
+      const searchTerm = `%${search.trim()}%`;
+      queryBuilder.andWhere(
+        `(
+        cliente.nombre LIKE :search OR 
+        cliente.telefono LIKE :search OR 
+        cliente.direccion LIKE :search
+      )`,
+        { search: searchTerm },
+      );
+    }
+
+    // Orden descendente por id
+    queryBuilder.orderBy('cliente.id_cliente', 'DESC');
+
+    // Paginación
+    queryBuilder.skip(skip).take(limit);
+
+    const [data, total] = await queryBuilder.getManyAndCount();
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
   }
 
   async findAllActive(): Promise<Cliente[]> {

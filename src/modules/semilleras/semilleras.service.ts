@@ -41,7 +41,7 @@ export class SemillerasService {
     if (search.trim()) {
       const searchTerm = `%${search.trim()}%`;
       queryBuilder.andWhere(
-        '(semillera.nombre LIKE :search OR semillera.ubicacion LIKE :search)',
+        '(semillera.nombre LIKE :search OR semillera.direccion LIKE :search)',
         {
           search: searchTerm,
         },

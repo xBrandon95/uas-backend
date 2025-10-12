@@ -18,10 +18,10 @@ export class Usuario {
   @PrimaryGeneratedColumn()
   id_usuario: number;
 
-  @Column()
+  @Column({ nullable: true })
   id_unidad: number;
 
-  @ManyToOne(() => Unidad)
+  @ManyToOne(() => Unidad, { nullable: true })
   @JoinColumn({ name: 'id_unidad' })
   unidad: Unidad;
 

@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { VariedadesService } from './variedades.service';
 import { CreateVariedadDto } from './dto/create-variedad.dto';
@@ -19,6 +20,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/roles.enum';
 import { Variedad } from './entities/variedad.entity';
+import { PaginationDto } from '../cooperadores/dto/pagination.dto';
 
 @Controller('variedades')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -33,8 +35,8 @@ export class VariedadesController {
 
   @Get()
   @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
-  findAll(): Promise<Variedad[]> {
-    return this.variedadesService.findAll();
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.variedadesService.findAll(paginationDto);
   }
 
   @Get('activas')

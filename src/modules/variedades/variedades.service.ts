@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Variedad } from './entities/variedad.entity';
 import { CreateVariedadDto } from './dto/create-variedad.dto';
 import { UpdateVariedadDto } from './dto/update-variedad.dto';
+import { PaginationDto } from '../cooperadores/dto/pagination.dto';
 
 @Injectable()
 export class VariedadesService {
@@ -17,11 +18,40 @@ export class VariedadesService {
     return await this.variedadRepository.save(variedad);
   }
 
-  async findAll(): Promise<Variedad[]> {
-    return await this.variedadRepository.find({
-      relations: ['semilla'],
-      order: { nombre: 'ASC' },
-    });
+  async findAll(paginationDto: PaginationDto) {
+    const { search = '', page = 1, limit = 10 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.variedadRepository
+      .createQueryBuilder('variedad')
+      .leftJoinAndSelect('variedad.semilla', 'semilla');
+
+    if (search.trim()) {
+      const searchTerm = search.trim();
+      queryBuilder.andWhere(
+        '(variedad.nombre LIKE :search OR semilla.nombre LIKE :search)',
+        { search: `%${searchTerm}%` },
+      );
+    }
+    // Orden descendente por id
+    queryBuilder.orderBy('variedad.id_variedad', 'DESC');
+    // Paginación
+    queryBuilder.skip(skip).take(limit);
+
+    const [data, total] = await queryBuilder.getManyAndCount();
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
   }
 
   async findAllActive(): Promise<Variedad[]> {
@@ -56,9 +86,9 @@ export class VariedadesService {
     id: number,
     updateVariedadDto: UpdateVariedadDto,
   ): Promise<Variedad> {
-    const variedad = await this.findOne(id);
-    Object.assign(variedad, updateVariedadDto);
-    return await this.variedadRepository.save(variedad);
+    await this.findOne(id);
+    await this.variedadRepository.update(id, updateVariedadDto);
+    return await this.findOne(id);
   }
 
   async remove(id: number): Promise<void> {

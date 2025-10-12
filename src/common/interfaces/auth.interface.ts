@@ -4,12 +4,14 @@ export interface JwtPayload {
   sub: number;
   usuario: string;
   rol: Role;
+  id_unidad?: number;
 }
 
 export interface AuthenticatedUser {
   id_usuario: number;
   usuario: string;
   rol: Role;
+  id_unidad?: number;
 }
 
 export interface LoginResponse {
@@ -20,6 +22,7 @@ export interface LoginResponse {
     nombre: string;
     usuario: string;
     rol: Role;
+    id_unidad?: number;
   };
 }
 
