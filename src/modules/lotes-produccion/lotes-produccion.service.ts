@@ -8,18 +8,59 @@ import { Repository, Between } from 'typeorm';
 import { LoteProduccion } from './entities/lote-produccion.entity';
 import { CreateLoteProduccionDto } from './dto/create-lote-produccion.dto';
 import { UpdateLoteProduccionDto } from './dto/update-lote-produccion.dto';
+import { OrdenIngreso } from '../ordenes-ingreso/entities/orden-ingreso.entity';
 
 @Injectable()
 export class LotesProduccionService {
   constructor(
     @InjectRepository(LoteProduccion)
     private readonly loteProduccionRepository: Repository<LoteProduccion>,
+    @InjectRepository(OrdenIngreso)
+    private readonly ordenIngresoRepository: Repository<OrdenIngreso>,
   ) {}
 
   async create(
     createLoteProduccionDto: CreateLoteProduccionDto,
     idUsuarioCreador: number,
   ): Promise<LoteProduccion> {
+    // 1. Buscar la orden de ingreso
+    const ordenIngreso = await this.ordenIngresoRepository.findOne({
+      where: { id_orden_ingreso: createLoteProduccionDto.id_orden_ingreso },
+    });
+
+    if (!ordenIngreso) {
+      throw new NotFoundException(
+        `Orden de ingreso ${createLoteProduccionDto.id_orden_ingreso} no encontrada`,
+      );
+    }
+
+    // 2. Calcular total ya producido de esta orden
+    const lotesExistentes = await this.loteProduccionRepository.find({
+      where: { id_orden_ingreso: createLoteProduccionDto.id_orden_ingreso },
+    });
+
+    const totalKgProducido = lotesExistentes.reduce(
+      (sum, lote) => sum + Number(lote.total_kg),
+      0,
+    );
+
+    // 3. Calcular el kg del nuevo lote
+    const nuevoLoteKg =
+      createLoteProduccionDto.nro_bolsas * createLoteProduccionDto.kg_por_bolsa;
+
+    // 4. Validar que no exceda el peso neto de la orden de ingreso
+    const totalDespuesDeCrear = totalKgProducido + nuevoLoteKg;
+
+    if (totalDespuesDeCrear > Number(ordenIngreso.peso_neto)) {
+      throw new BadRequestException(
+        `No se puede crear el lote. ` +
+          `Peso neto orden de ingreso: ${ordenIngreso.peso_neto} kg. ` +
+          `Ya producido: ${totalKgProducido} kg. ` +
+          `Nuevo lote: ${nuevoLoteKg} kg. ` +
+          `Total sería: ${totalDespuesDeCrear} kg (excede en ${totalDespuesDeCrear - Number(ordenIngreso.peso_neto)} kg)`,
+      );
+    }
+
     // Generar número de lote automático
     const numeroLote = await this.generarNumeroLote();
 

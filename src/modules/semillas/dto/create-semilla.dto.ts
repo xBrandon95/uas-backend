@@ -12,11 +12,6 @@ export class CreateSemillaDto {
   @MaxLength(100)
   nombre: string;
 
-  @IsString()
-  @IsOptional()
-  @MaxLength(100)
-  tipo?: string;
-
   @IsBoolean()
   @IsOptional()
   activo?: boolean;

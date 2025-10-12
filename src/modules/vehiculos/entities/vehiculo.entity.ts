@@ -15,9 +15,6 @@ export class Vehiculo {
   placa: string;
 
   @Column({ length: 100, nullable: true })
-  tipo: string;
-
-  @Column({ length: 100, nullable: true })
   marca: string;
 
   @Column({ length: 100, nullable: true })

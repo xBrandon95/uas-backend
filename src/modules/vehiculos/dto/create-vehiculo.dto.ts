@@ -15,11 +15,6 @@ export class CreateVehiculoDto {
   @IsString()
   @IsOptional()
   @MaxLength(100)
-  tipo?: string;
-
-  @IsString()
-  @IsOptional()
-  @MaxLength(100)
   marca?: string;
 
   @IsString()

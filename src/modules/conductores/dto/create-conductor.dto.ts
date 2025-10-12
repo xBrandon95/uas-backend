@@ -22,11 +22,6 @@ export class CreateConductorDto {
   @MaxLength(50)
   telefono?: string;
 
-  @IsString()
-  @IsOptional()
-  @MaxLength(50)
-  licencia?: string;
-
   @IsBoolean()
   @IsOptional()
   activo?: boolean;

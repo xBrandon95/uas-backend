@@ -4,7 +4,6 @@ import {
   MaxLength,
   IsOptional,
   IsBoolean,
-  IsEmail,
 } from 'class-validator';
 
 export class CreateClienteDto {
@@ -27,11 +26,6 @@ export class CreateClienteDto {
   @IsOptional()
   @MaxLength(300)
   direccion?: string;
-
-  @IsEmail()
-  @IsOptional()
-  @MaxLength(100)
-  email?: string;
 
   @IsBoolean()
   @IsOptional()

@@ -20,9 +20,6 @@ export class Conductor {
   @Column({ length: 50, nullable: true })
   telefono: string;
 
-  @Column({ length: 50, nullable: true })
-  licencia: string;
-
   @Column({ default: true })
   activo: boolean;
 

@@ -23,9 +23,6 @@ export class Cliente {
   @Column({ length: 300, nullable: true })
   direccion: string;
 
-  @Column({ length: 100, nullable: true })
-  email: string;
-
   @Column({ default: true })
   activo: boolean;
 

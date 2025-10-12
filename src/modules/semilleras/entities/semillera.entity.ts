@@ -20,9 +20,6 @@ export class Semillera {
   @Column({ length: 50, nullable: true })
   telefono: string;
 
-  @Column({ length: 50, nullable: true })
-  nit: string;
-
   @Column({ default: true })
   activo: boolean;
 

@@ -14,7 +14,7 @@ export class CreateUnidadDto {
 
   @IsString()
   @IsOptional()
-  descripcion?: string;
+  ubicacion?: string;
 
   @IsBoolean()
   @IsOptional()

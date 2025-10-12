@@ -15,7 +15,7 @@ export class Unidad {
   nombre: string;
 
   @Column({ type: 'text', nullable: true })
-  descripcion: string;
+  ubicacion: string;
 
   @Column({ default: true })
   activo: boolean;

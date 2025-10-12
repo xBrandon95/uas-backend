@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { CooperadoresService } from './cooperadores.service';
 import { CreateCooperadorDto } from './dto/create-cooperador.dto';
@@ -19,6 +20,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/roles.enum';
 import { Cooperador } from './entities/cooperador.entity';
+import { PaginationDto } from './dto/pagination.dto';
 
 @Controller('cooperadores')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -35,8 +37,8 @@ export class CooperadoresController {
 
   @Get()
   @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
-  findAll(): Promise<Cooperador[]> {
-    return this.cooperadoresService.findAll();
+  async findAll(@Query() paginationDto: PaginationDto) {
+    return this.cooperadoresService.findAll(paginationDto);
   }
 
   @Get('activos')

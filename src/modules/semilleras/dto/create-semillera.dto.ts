@@ -22,11 +22,6 @@ export class CreateSemilleraDto {
   @MaxLength(50)
   telefono?: string;
 
-  @IsString()
-  @IsOptional()
-  @MaxLength(50)
-  nit?: string;
-
   @IsBoolean()
   @IsOptional()
   activo?: boolean;

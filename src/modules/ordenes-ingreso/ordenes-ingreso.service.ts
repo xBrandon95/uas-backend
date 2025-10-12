@@ -8,12 +8,15 @@ import { Repository, Between } from 'typeorm';
 import { OrdenIngreso } from './entities/orden-ingreso.entity';
 import { CreateOrdenIngresoDto } from './dto/create-orden-ingreso.dto';
 import { UpdateOrdenIngresoDto } from './dto/update-orden-ingreso.dto';
+import { LoteProduccion } from '../lotes-produccion/entities/lote-produccion.entity';
 
 @Injectable()
 export class OrdenesIngresoService {
   constructor(
     @InjectRepository(OrdenIngreso)
     private readonly ordenIngresoRepository: Repository<OrdenIngreso>,
+    @InjectRepository(LoteProduccion)
+    private readonly loteProduccionRepository: Repository<LoteProduccion>,
   ) {}
 
   async create(
@@ -236,5 +239,49 @@ export class OrdenesIngresoService {
       .getRawMany();
 
     return estadisticas;
+  }
+
+  async getResumenProduccion(idOrdenIngreso: number): Promise<any> {
+    const ordenIngreso = await this.findOne(idOrdenIngreso);
+
+    const lotes = await this.loteProduccionRepository.find({
+      where: { id_orden_ingreso: idOrdenIngreso },
+    });
+
+    const totalKgProducido = lotes.reduce(
+      (sum, lote) => sum + Number(lote.total_kg),
+      0,
+    );
+
+    const totalBolsasProducidas = lotes.reduce(
+      (sum, lote) => sum + lote.nro_bolsas,
+      0,
+    );
+
+    const pesoDisponible = Number(ordenIngreso.peso_neto) - totalKgProducido;
+    const porcentajeUtilizado =
+      (totalKgProducido / Number(ordenIngreso.peso_neto)) * 100;
+
+    return {
+      orden_ingreso: {
+        numero_orden: ordenIngreso.numero_orden,
+        peso_neto: ordenIngreso.peso_neto,
+        nro_bolsas_ingresadas: ordenIngreso.nro_bolsas,
+      },
+      produccion: {
+        total_kg_producido: totalKgProducido,
+        total_bolsas_producidas: totalBolsasProducidas,
+        cantidad_lotes: lotes.length,
+        peso_disponible: pesoDisponible,
+        porcentaje_utilizado: porcentajeUtilizado.toFixed(2),
+      },
+      lotes: lotes.map((lote) => ({
+        nro_lote: lote.nro_lote,
+        nro_bolsas: lote.nro_bolsas,
+        kg_por_bolsa: lote.kg_por_bolsa,
+        total_kg: lote.total_kg,
+        presentacion: lote.presentacion,
+      })),
+    };
   }
 }

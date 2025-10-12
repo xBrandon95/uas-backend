@@ -14,9 +14,6 @@ export class Semilla {
   @Column({ length: 100 })
   nombre: string;
 
-  @Column({ length: 100, nullable: true })
-  tipo: string;
-
   @Column({ default: true })
   activo: boolean;
 
