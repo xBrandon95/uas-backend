@@ -1,10 +1,4 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity('semillas')
 export class Semilla {
@@ -16,10 +10,4 @@ export class Semilla {
 
   @Column({ default: true })
   activo: boolean;
-
-  @CreateDateColumn()
-  fecha_creacion: Date;
-
-  @UpdateDateColumn()
-  fecha_actualizacion: Date;
 }

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cooperador } from './entities/cooperador.entity';
@@ -14,6 +18,14 @@ export class CooperadoresService {
   ) {}
 
   async create(createCooperadorDto: CreateCooperadorDto): Promise<Cooperador> {
+    const existingCooperador = await this.cooperadorRepository.findOne({
+      where: { nombre: createCooperadorDto.ci },
+    });
+
+    if (existingCooperador) {
+      throw new ConflictException('Ya existe un cooperador con ese ci');
+    }
+
     const cooperador = this.cooperadorRepository.create(createCooperadorDto);
     return await this.cooperadorRepository.save(cooperador);
   }
@@ -22,14 +34,13 @@ export class CooperadoresService {
     const { search = '', page = 1, limit = 10 } = paginationDto;
     const skip = (page - 1) * limit;
 
-    const queryBuilder = this.cooperadorRepository
-      .createQueryBuilder('cooperador')
-      .leftJoinAndSelect('cooperador.semillera', 'semillera');
+    const queryBuilder =
+      this.cooperadorRepository.createQueryBuilder('cooperador');
 
     if (search.trim()) {
       const searchTerm = search.trim();
       queryBuilder.andWhere(
-        '(cooperador.nombre LIKE :search OR cooperador.ci LIKE :search OR semillera.nombre LIKE :search)',
+        '(cooperador.nombre LIKE :search OR cooperador.ci LIKE :search)',
         { search: `%${searchTerm}%` },
       );
     }
@@ -56,15 +67,6 @@ export class CooperadoresService {
 
   async findAllActive(): Promise<Cooperador[]> {
     return await this.cooperadorRepository.find({
-      where: { activo: true },
-      relations: ['semillera'],
-      order: { nombre: 'ASC' },
-    });
-  }
-
-  async findBySemillera(idSemillera: number): Promise<Cooperador[]> {
-    return await this.cooperadorRepository.find({
-      where: { id_semillera: idSemillera, activo: true },
       order: { nombre: 'ASC' },
     });
   }
@@ -72,7 +74,6 @@ export class CooperadoresService {
   async findOne(id: number): Promise<Cooperador> {
     const cooperador = await this.cooperadorRepository.findOne({
       where: { id_cooperador: id },
-      relations: ['semillera'],
     });
 
     if (!cooperador) {
@@ -94,11 +95,5 @@ export class CooperadoresService {
   async remove(id: number): Promise<void> {
     const cooperador = await this.findOne(id);
     await this.cooperadorRepository.remove(cooperador);
-  }
-
-  async toggleActive(id: number): Promise<Cooperador> {
-    const cooperador = await this.findOne(id);
-    cooperador.activo = !cooperador.activo;
-    return await this.cooperadorRepository.save(cooperador);
   }
 }

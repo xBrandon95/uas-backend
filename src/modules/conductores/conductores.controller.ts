@@ -60,12 +60,6 @@ export class ConductoresController {
     return this.conductoresService.update(id, updateConductorDto);
   }
 
-  @Patch(':id/toggle-active')
-  @Roles(Role.ADMIN)
-  toggleActive(@Param('id', ParseIntPipe) id: number): Promise<Conductor> {
-    return this.conductoresService.toggleActive(id);
-  }
-
   @Delete(':id')
   @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)

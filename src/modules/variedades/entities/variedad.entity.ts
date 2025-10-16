@@ -2,8 +2,6 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  CreateDateColumn,
-  UpdateDateColumn,
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
@@ -23,13 +21,4 @@ export class Variedad {
 
   @Column({ length: 100 })
   nombre: string;
-
-  @Column({ default: true })
-  activo: boolean;
-
-  @CreateDateColumn()
-  fecha_creacion: Date;
-
-  @UpdateDateColumn()
-  fecha_actualizacion: Date;
 }

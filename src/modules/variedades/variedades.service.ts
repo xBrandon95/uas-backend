@@ -56,7 +56,6 @@ export class VariedadesService {
 
   async findAllActive(): Promise<Variedad[]> {
     return await this.variedadRepository.find({
-      where: { activo: true },
       relations: ['semilla'],
       order: { nombre: 'ASC' },
     });
@@ -64,7 +63,7 @@ export class VariedadesService {
 
   async findBySemilla(idSemilla: number): Promise<Variedad[]> {
     return await this.variedadRepository.find({
-      where: { id_semilla: idSemilla, activo: true },
+      where: { id_semilla: idSemilla },
       order: { nombre: 'ASC' },
     });
   }
@@ -94,11 +93,5 @@ export class VariedadesService {
   async remove(id: number): Promise<void> {
     const variedad = await this.findOne(id);
     await this.variedadRepository.remove(variedad);
-  }
-
-  async toggleActive(id: number): Promise<Variedad> {
-    const variedad = await this.findOne(id);
-    variedad.activo = !variedad.activo;
-    return await this.variedadRepository.save(variedad);
   }
 }

@@ -25,6 +25,8 @@ export class AuthService {
       loginDto.password,
     );
 
+    console.log(usuario);
+
     const payload: JwtPayload = {
       sub: usuario.id_usuario,
       usuario: usuario.usuario,

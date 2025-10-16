@@ -47,14 +47,6 @@ export class CooperadoresController {
     return this.cooperadoresService.findAllActive();
   }
 
-  @Get('semillera/:idSemillera')
-  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
-  findBySemillera(
-    @Param('idSemillera', ParseIntPipe) idSemillera: number,
-  ): Promise<Cooperador[]> {
-    return this.cooperadoresService.findBySemillera(idSemillera);
-  }
-
   @Get(':id')
   @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   findOne(@Param('id', ParseIntPipe) id: number): Promise<Cooperador> {
@@ -68,12 +60,6 @@ export class CooperadoresController {
     @Body() updateCooperadorDto: UpdateCooperadorDto,
   ): Promise<Cooperador> {
     return this.cooperadoresService.update(id, updateCooperadorDto);
-  }
-
-  @Patch(':id/toggle-active')
-  @Roles(Role.ADMIN)
-  toggleActive(@Param('id', ParseIntPipe) id: number): Promise<Cooperador> {
-    return this.cooperadoresService.toggleActive(id);
   }
 
   @Delete(':id')

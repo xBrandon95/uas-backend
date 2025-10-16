@@ -60,12 +60,6 @@ export class VehiculosController {
     return this.vehiculosService.update(id, updateVehiculoDto);
   }
 
-  @Patch(':id/toggle-active')
-  @Roles(Role.ADMIN)
-  toggleActive(@Param('id', ParseIntPipe) id: number): Promise<Vehiculo> {
-    return this.vehiculosService.toggleActive(id);
-  }
-
   @Delete(':id')
   @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)

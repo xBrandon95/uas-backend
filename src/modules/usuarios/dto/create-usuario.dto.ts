@@ -12,8 +12,8 @@ import { Role } from '../../../common/enums/roles.enum';
 
 export class CreateUsuarioDto {
   @IsInt()
-  @IsNotEmpty()
-  id_unidad: number;
+  @IsOptional()
+  id_unidad?: number;
 
   @IsString()
   @IsNotEmpty()

@@ -1,10 +1,4 @@
-import {
-  IsString,
-  IsNotEmpty,
-  MaxLength,
-  IsOptional,
-  IsBoolean,
-} from 'class-validator';
+import { IsString, IsNotEmpty, MaxLength, IsOptional } from 'class-validator';
 
 export class CreateVehiculoDto {
   @IsString()
@@ -15,14 +9,5 @@ export class CreateVehiculoDto {
   @IsString()
   @IsOptional()
   @MaxLength(100)
-  marca?: string;
-
-  @IsString()
-  @IsOptional()
-  @MaxLength(100)
-  modelo?: string;
-
-  @IsBoolean()
-  @IsOptional()
-  activo?: boolean;
+  marca_modelo?: string;
 }

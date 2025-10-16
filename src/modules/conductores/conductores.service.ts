@@ -68,7 +68,6 @@ export class ConductoresService {
 
   async findAllActive(): Promise<Conductor[]> {
     return await this.conductorRepository.find({
-      where: { activo: true },
       order: { nombre: 'ASC' },
     });
   }
@@ -108,11 +107,5 @@ export class ConductoresService {
   async remove(id: number): Promise<void> {
     const conductor = await this.findOne(id);
     await this.conductorRepository.remove(conductor);
-  }
-
-  async toggleActive(id: number): Promise<Conductor> {
-    const conductor = await this.findOne(id);
-    conductor.activo = !conductor.activo;
-    return await this.conductorRepository.save(conductor);
   }
 }

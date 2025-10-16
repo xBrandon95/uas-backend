@@ -1,10 +1,4 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity('categorias')
 export class Categoria {
@@ -13,13 +7,4 @@ export class Categoria {
 
   @Column({ length: 100 })
   nombre: string;
-
-  @Column({ default: true })
-  activo: boolean;
-
-  @CreateDateColumn()
-  fecha_creacion: Date;
-
-  @UpdateDateColumn()
-  fecha_actualizacion: Date;
 }

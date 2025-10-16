@@ -8,12 +8,16 @@ import { Repository } from 'typeorm';
 import { Usuario } from './entities/usuario.entity';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
+import { PaginationDto } from '../cooperadores/dto/pagination.dto';
+import { Unidad } from '../unidades/entities/unidad.entity';
 
 @Injectable()
 export class UsuariosService {
   constructor(
     @InjectRepository(Usuario)
     private readonly usuarioRepository: Repository<Usuario>,
+    @InjectRepository(Unidad)
+    private readonly unidadRepository: Repository<Unidad>,
   ) {}
 
   async create(createUsuarioDto: CreateUsuarioDto): Promise<Usuario> {
@@ -30,11 +34,40 @@ export class UsuariosService {
     return await this.usuarioRepository.save(usuario);
   }
 
-  async findAll(): Promise<Usuario[]> {
-    return await this.usuarioRepository.find({
-      relations: ['unidad'],
-      order: { fecha_creacion: 'DESC' },
-    });
+  async findAll(paginationDto: PaginationDto) {
+    const { search = '', page = 1, limit = 10 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.usuarioRepository
+      .createQueryBuilder('usuario')
+      .leftJoinAndSelect('usuario.unidad', 'unidad');
+
+    if (search.trim()) {
+      const searchTerm = search.trim();
+      queryBuilder.andWhere(
+        '(usuario.nombre LIKE :search OR usuario.usuario LIKE :search OR unidad.nombre LIKE :search)',
+        { search: `%${searchTerm}%` },
+      );
+    }
+    // Orden descendente por id
+    queryBuilder.orderBy('usuario.id_usuario', 'DESC');
+    // Paginación
+    queryBuilder.skip(skip).take(limit);
+
+    const [data, total] = await queryBuilder.getManyAndCount();
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
   }
 
   async findOne(id: number): Promise<Usuario> {
@@ -53,7 +86,15 @@ export class UsuariosService {
   async findByUsername(usuario: string): Promise<Usuario | null> {
     return await this.usuarioRepository.findOne({
       where: { usuario },
-      select: ['id_usuario', 'nombre', 'usuario', 'password', 'rol', 'activo'],
+      select: [
+        'id_usuario',
+        'nombre',
+        'usuario',
+        'password',
+        'rol',
+        'activo',
+        'id_unidad',
+      ],
     });
   }
 
@@ -63,7 +104,7 @@ export class UsuariosService {
   ): Promise<Usuario> {
     const usuario = await this.findOne(id);
 
-    // Si se está actualizando el nombre de usuario, verificar que no exista
+    // Verificar si el nuevo nombre de usuario está en uso
     if (
       updateUsuarioDto.usuario &&
       updateUsuarioDto.usuario !== usuario.usuario
@@ -77,7 +118,22 @@ export class UsuariosService {
       }
     }
 
+    // Asignar los campos simples
     Object.assign(usuario, updateUsuarioDto);
+
+    // 🔥 Manejar cambio de relación unidad
+    if (updateUsuarioDto.id_unidad) {
+      const unidad = await this.unidadRepository.findOne({
+        where: { id_unidad: updateUsuarioDto.id_unidad },
+      });
+
+      if (!unidad) {
+        throw new NotFoundException('La unidad especificada no existe');
+      }
+
+      usuario.unidad = unidad;
+    }
+
     return await this.usuarioRepository.save(usuario);
   }
 

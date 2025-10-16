@@ -1,10 +1,4 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity('vehiculos')
 export class Vehiculo {
@@ -15,17 +9,5 @@ export class Vehiculo {
   placa: string;
 
   @Column({ length: 100, nullable: true })
-  marca: string;
-
-  @Column({ length: 100, nullable: true })
-  modelo: string;
-
-  @Column({ default: true })
-  activo: boolean;
-
-  @CreateDateColumn()
-  fecha_creacion: Date;
-
-  @UpdateDateColumn()
-  fecha_actualizacion: Date;
+  marca_modelo: string;
 }

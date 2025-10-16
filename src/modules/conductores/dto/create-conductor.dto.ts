@@ -1,10 +1,4 @@
-import {
-  IsString,
-  IsNotEmpty,
-  MaxLength,
-  IsOptional,
-  IsBoolean,
-} from 'class-validator';
+import { IsString, IsNotEmpty, MaxLength, IsOptional } from 'class-validator';
 
 export class CreateConductorDto {
   @IsString()
@@ -21,8 +15,4 @@ export class CreateConductorDto {
   @IsOptional()
   @MaxLength(50)
   telefono?: string;
-
-  @IsBoolean()
-  @IsOptional()
-  activo?: boolean;
 }

@@ -60,12 +60,6 @@ export class CategoriasController {
     return this.categoriasService.update(id, updateCategoriaDto);
   }
 
-  @Patch(':id/toggle-active')
-  @Roles(Role.ADMIN)
-  toggleActive(@Param('id', ParseIntPipe) id: number): Promise<Categoria> {
-    return this.categoriasService.toggleActive(id);
-  }
-
   @Delete(':id')
   @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)

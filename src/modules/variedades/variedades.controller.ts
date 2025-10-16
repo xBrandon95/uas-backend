@@ -68,12 +68,6 @@ export class VariedadesController {
     return this.variedadesService.update(id, updateVariedadDto);
   }
 
-  @Patch(':id/toggle-active')
-  @Roles(Role.ADMIN)
-  toggleActive(@Param('id', ParseIntPipe) id: number): Promise<Variedad> {
-    return this.variedadesService.toggleActive(id);
-  }
-
   @Delete(':id')
   @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)

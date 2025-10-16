@@ -40,7 +40,7 @@ export class VehiculosService {
     if (search.trim()) {
       const searchTerm = `%${search.trim()}%`;
       queryBuilder.andWhere(
-        '(vehiculo.placa LIKE :search OR vehiculo.marca LIKE :search OR vehiculo.modelo LIKE :search)',
+        '(vehiculo.placa LIKE :search OR vehiculo.marca_modelo LIKE :search)',
         { search: searchTerm },
       );
     }
@@ -66,7 +66,6 @@ export class VehiculosService {
 
   async findAllActive(): Promise<Vehiculo[]> {
     return await this.vehiculoRepository.find({
-      where: { activo: true },
       order: { placa: 'ASC' },
     });
   }
@@ -106,11 +105,5 @@ export class VehiculosService {
   async remove(id: number): Promise<void> {
     const vehiculo = await this.findOne(id);
     await this.vehiculoRepository.remove(vehiculo);
-  }
-
-  async toggleActive(id: number): Promise<Vehiculo> {
-    const vehiculo = await this.findOne(id);
-    vehiculo.activo = !vehiculo.activo;
-    return await this.vehiculoRepository.save(vehiculo);
   }
 }

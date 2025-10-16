@@ -1,10 +1,4 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity('conductores')
 export class Conductor {
@@ -19,13 +13,4 @@ export class Conductor {
 
   @Column({ length: 50, nullable: true })
   telefono: string;
-
-  @Column({ default: true })
-  activo: boolean;
-
-  @CreateDateColumn()
-  fecha_creacion: Date;
-
-  @UpdateDateColumn()
-  fecha_actualizacion: Date;
 }

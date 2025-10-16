@@ -69,7 +69,6 @@ export class CategoriasService {
 
   async findAllActive(): Promise<Categoria[]> {
     return await this.categoriaRepository.find({
-      where: { activo: true },
       order: { nombre: 'ASC' },
     });
   }
@@ -112,11 +111,5 @@ export class CategoriasService {
   async remove(id: number): Promise<void> {
     const categoria = await this.findOne(id);
     await this.categoriaRepository.remove(categoria);
-  }
-
-  async toggleActive(id: number): Promise<Categoria> {
-    const categoria = await this.findOne(id);
-    categoria.activo = !categoria.activo;
-    return await this.categoriaRepository.save(categoria);
   }
 }

@@ -1,11 +1,4 @@
-import {
-  IsString,
-  IsNotEmpty,
-  MaxLength,
-  IsOptional,
-  IsBoolean,
-  IsInt,
-} from 'class-validator';
+import { IsString, IsNotEmpty, MaxLength, IsInt } from 'class-validator';
 
 export class CreateVariedadDto {
   @IsInt()
@@ -16,8 +9,4 @@ export class CreateVariedadDto {
   @IsNotEmpty()
   @MaxLength(100)
   nombre: string;
-
-  @IsBoolean()
-  @IsOptional()
-  activo?: boolean;
 }
