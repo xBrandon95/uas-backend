@@ -85,9 +85,16 @@ export class LotesProduccionController {
   }
 
   @Get('inventario')
-  @Roles(Role.ADMIN, Role.ENCARGADO)
-  getInventarioPorVariedad(): Promise<any[]> {
-    return this.lotesProduccionService.getInventarioPorVariedad();
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
+  getInventarioPorVariedad(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('idUnidad') idUnidad?: number,
+  ): Promise<any[]> {
+    return this.lotesProduccionService.getInventarioPorVariedad(
+      user.rol,
+      user.id_unidad,
+      idUnidad,
+    );
   }
 
   @Get('estadisticas')

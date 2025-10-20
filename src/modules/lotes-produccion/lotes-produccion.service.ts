@@ -235,8 +235,12 @@ export class LotesProduccionService {
     return `LP-${year}${month}-${secuencial}`;
   }
 
-  async getInventarioPorVariedad(): Promise<any[]> {
-    const resultado = await this.loteProduccionRepository
+  async getInventarioPorVariedad(
+    rol: string,
+    idUnidadUsuario?: number,
+    idUnidadFiltro?: number,
+  ): Promise<any[]> {
+    const queryBuilder = this.loteProduccionRepository
       .createQueryBuilder('lote')
       .leftJoin('lote.variedad', 'variedad')
       .leftJoin('variedad.semilla', 'semilla')
@@ -248,13 +252,26 @@ export class LotesProduccionService {
       .addSelect('SUM(lote.total_kg)', 'total_kg')
       .where('lote.estado IN (:...estados)', {
         estados: ['disponible', 'parcialmente_vendido'],
-      }) // <-- INCLUYE AMBOS ESTADOS
+      });
+
+    // Si es ENCARGADO u OPERADOR, solo ve su unidad
+    if (rol !== 'admin') {
+      queryBuilder.andWhere('lote.id_unidad = :idUnidad', {
+        idUnidad: idUnidadUsuario,
+      });
+    } else if (idUnidadFiltro) {
+      // Si es ADMIN y filtra por unidad específica
+      queryBuilder.andWhere('lote.id_unidad = :idUnidad', {
+        idUnidad: idUnidadFiltro,
+      });
+    }
+
+    queryBuilder
       .groupBy('variedad.id_variedad')
       .addGroupBy('semilla.nombre')
-      .addGroupBy('categoria.id_categoria')
-      .getRawMany();
+      .addGroupBy('categoria.id_categoria');
 
-    return resultado;
+    return await queryBuilder.getRawMany();
   }
 
   async getEstadisticas(idUnidad?: number): Promise<any> {

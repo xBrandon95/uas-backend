@@ -22,6 +22,7 @@ import { Role } from '../../common/enums/roles.enum';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { OrdenSalida } from './entities/orden-salida.entity';
 import { type AuthenticatedUser } from '../../common/interfaces/auth.interface';
+import { LoteProduccion } from '../lotes-produccion/entities/lote-produccion.entity';
 
 @Controller('ordenes-salida')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -42,8 +43,20 @@ export class OrdenesSalidaController {
 
   @Get()
   @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
-  findAll(): Promise<OrdenSalida[]> {
-    return this.ordenesSalidaService.findAll();
+  findAll(@CurrentUser() user: AuthenticatedUser): Promise<OrdenSalida[]> {
+    return this.ordenesSalidaService.findAll(user.rol, user.id_unidad);
+  }
+
+  // Agregar nuevo endpoint para lotes disponibles
+  @Get('lotes-disponibles')
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
+  getLotesDisponibles(
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<LoteProduccion[]> {
+    return this.ordenesSalidaService.getLotesDisponiblesPorUnidad(
+      user.rol,
+      user.id_unidad,
+    );
   }
 
   @Get('estado/:estado')

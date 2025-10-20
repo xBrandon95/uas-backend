@@ -106,22 +106,59 @@ export class OrdenesSalidaService {
     }
   }
 
-  async findAll(): Promise<OrdenSalida[]> {
-    return await this.ordenSalidaRepository.find({
-      relations: [
-        'semillera',
-        'cliente',
-        'conductor',
-        'vehiculo',
-        'unidad',
-        'usuario_creador',
-        'detalles',
-        'detalles.variedad',
-        'detalles.categoria',
-        'detalles.lote_produccion',
-      ],
-      order: { fecha_creacion: 'DESC' },
-    });
+  // Modificar findAll para aceptar filtros por rol
+  async findAll(rol: string, idUnidadUsuario?: number): Promise<OrdenSalida[]> {
+    const queryBuilder = this.ordenSalidaRepository
+      .createQueryBuilder('orden')
+      .leftJoinAndSelect('orden.semillera', 'semillera')
+      .leftJoinAndSelect('orden.cliente', 'cliente')
+      .leftJoinAndSelect('orden.conductor', 'conductor')
+      .leftJoinAndSelect('orden.vehiculo', 'vehiculo')
+      .leftJoinAndSelect('orden.unidad', 'unidad')
+      .leftJoinAndSelect('orden.usuario_creador', 'usuario_creador')
+      .leftJoinAndSelect('orden.detalles', 'detalles')
+      .leftJoinAndSelect('detalles.variedad', 'variedad')
+      .leftJoinAndSelect('detalles.categoria', 'categoria')
+      .leftJoinAndSelect('detalles.lote_produccion', 'lote_produccion');
+
+    // Si no es admin, filtrar por unidad
+    if (rol !== 'admin' && idUnidadUsuario) {
+      queryBuilder.where('orden.id_unidad = :idUnidad', {
+        idUnidad: idUnidadUsuario,
+      });
+    }
+
+    queryBuilder.orderBy('orden.fecha_creacion', 'DESC');
+
+    return await queryBuilder.getMany();
+  }
+
+  // Agregar método para obtener lotes disponibles por unidad
+  async getLotesDisponiblesPorUnidad(
+    rol: string,
+    idUnidadUsuario?: number,
+  ): Promise<LoteProduccion[]> {
+    const queryBuilder = this.loteProduccionRepository
+      .createQueryBuilder('lote')
+      .leftJoinAndSelect('lote.variedad', 'variedad')
+      .leftJoinAndSelect('variedad.semilla', 'semilla')
+      .leftJoinAndSelect('lote.categoria_salida', 'categoria_salida')
+      .leftJoinAndSelect('lote.unidad', 'unidad')
+      .where('lote.estado IN (:...estados)', {
+        estados: ['disponible', 'parcialmente_vendido'],
+      })
+      .andWhere('lote.nro_bolsas > 0');
+
+    // Si no es admin, filtrar por unidad
+    if (rol !== 'admin' && idUnidadUsuario) {
+      queryBuilder.andWhere('lote.id_unidad = :idUnidad', {
+        idUnidad: idUnidadUsuario,
+      });
+    }
+
+    queryBuilder.orderBy('lote.fecha_creacion', 'DESC');
+
+    return await queryBuilder.getMany();
   }
 
   async findByEstado(estado: string): Promise<OrdenSalida[]> {
