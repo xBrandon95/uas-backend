@@ -34,7 +34,7 @@ export class UnidadesController {
   }
 
   @Get()
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   findAll(@Query() paginationDto: PaginationDto) {
     return this.unidadesService.findAll(paginationDto);
   }
