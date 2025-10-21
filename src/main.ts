@@ -28,8 +28,12 @@ async function bootstrap() {
   const corsOrigin =
     configService.get<string>('CORS_ORIGIN') || 'http://localhost:3001';
 
+  const allowedOrigins = corsOrigin
+    ? corsOrigin.split(',').map((origin) => origin.trim())
+    : ['http://localhost:3001'];
+
   app.enableCors({
-    origin: corsOrigin,
+    origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

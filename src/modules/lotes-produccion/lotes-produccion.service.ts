@@ -9,6 +9,7 @@ import { LoteProduccion } from './entities/lote-produccion.entity';
 import { CreateLoteProduccionDto } from './dto/create-lote-produccion.dto';
 import { UpdateLoteProduccionDto } from './dto/update-lote-produccion.dto';
 import { OrdenIngreso } from '../ordenes-ingreso/entities/orden-ingreso.entity';
+import { Role } from 'src/common/enums/roles.enum';
 
 @Injectable()
 export class LotesProduccionService {
@@ -79,19 +80,27 @@ export class LotesProduccionService {
     return await this.loteProduccionRepository.save(loteProduccion);
   }
 
-  async findAll(): Promise<LoteProduccion[]> {
-    return await this.loteProduccionRepository.find({
-      relations: [
-        'orden_ingreso',
-        'variedad',
-        'categoria_salida',
-        'unidad',
-        'usuario_creador',
-      ],
-      order: { fecha_creacion: 'DESC' },
-    });
-  }
+  async findAll(
+    rol: Role,
+    idUnidadUsuario?: number,
+  ): Promise<LoteProduccion[]> {
+    const queryBuilder = this.loteProduccionRepository
+      .createQueryBuilder('lote')
+      .leftJoinAndSelect('lote.orden_ingreso', 'orden_ingreso')
+      .leftJoinAndSelect('lote.variedad', 'variedad')
+      .leftJoinAndSelect('lote.categoria_salida', 'categoria_salida')
+      .leftJoinAndSelect('lote.unidad', 'unidad')
+      .leftJoinAndSelect('lote.usuario_creador', 'usuario_creador')
+      .orderBy('lote.fecha_creacion', 'DESC');
 
+    if (rol !== Role.ADMIN && idUnidadUsuario) {
+      queryBuilder.where('lote.id_unidad = :idUnidad', {
+        idUnidad: idUnidadUsuario,
+      });
+    }
+
+    return await queryBuilder.getMany();
+  }
   async findByEstado(estado: string): Promise<LoteProduccion[]> {
     return await this.loteProduccionRepository.find({
       where: { estado },

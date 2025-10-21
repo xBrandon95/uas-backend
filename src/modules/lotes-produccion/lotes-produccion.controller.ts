@@ -44,8 +44,8 @@ export class LotesProduccionController {
 
   @Get()
   @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
-  findAll(): Promise<LoteProduccion[]> {
-    return this.lotesProduccionService.findAll();
+  findAll(@CurrentUser() user: AuthenticatedUser): Promise<LoteProduccion[]> {
+    return this.lotesProduccionService.findAll(user.rol, user.id_unidad);
   }
 
   @Get('disponibles')
