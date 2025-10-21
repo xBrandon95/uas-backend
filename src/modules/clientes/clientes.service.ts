@@ -61,7 +61,6 @@ export class ClientesService {
 
   async findAllActive(): Promise<Cliente[]> {
     return await this.clienteRepository.find({
-      where: { activo: true },
       order: { nombre: 'ASC' },
     });
   }
@@ -90,11 +89,5 @@ export class ClientesService {
   async remove(id: number): Promise<void> {
     const cliente = await this.findOne(id);
     await this.clienteRepository.remove(cliente);
-  }
-
-  async toggleActive(id: number): Promise<Cliente> {
-    const cliente = await this.findOne(id);
-    cliente.activo = !cliente.activo;
-    return await this.clienteRepository.save(cliente);
   }
 }

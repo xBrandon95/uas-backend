@@ -22,13 +22,4 @@ export class Cliente {
 
   @Column({ length: 300, nullable: true })
   direccion: string;
-
-  @Column({ default: true })
-  activo: boolean;
-
-  @CreateDateColumn()
-  fecha_creacion: Date;
-
-  @UpdateDateColumn()
-  fecha_actualizacion: Date;
 }

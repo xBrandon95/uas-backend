@@ -60,12 +60,6 @@ export class ClientesController {
     return this.clientesService.update(id, updateClienteDto);
   }
 
-  @Patch(':id/toggle-active')
-  @Roles(Role.ADMIN)
-  toggleActive(@Param('id', ParseIntPipe) id: number): Promise<Cliente> {
-    return this.clientesService.toggleActive(id);
-  }
-
   @Delete(':id')
   @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
