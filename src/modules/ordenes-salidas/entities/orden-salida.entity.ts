@@ -14,6 +14,7 @@ import { Conductor } from '../../conductores/entities/conductor.entity';
 import { Vehiculo } from '../../vehiculos/entities/vehiculo.entity';
 import { Unidad } from '../../unidades/entities/unidad.entity';
 import { Usuario } from '../../usuarios/entities/usuario.entity';
+import { Semilla } from '../../semillas/entities/semilla.entity';
 import { DetalleOrdenSalida } from './detalle-orden-salida.entity';
 
 @Entity('ordenes_salida')
@@ -30,6 +31,14 @@ export class OrdenSalida {
   @ManyToOne(() => Semillera)
   @JoinColumn({ name: 'id_semillera' })
   semillera: Semillera;
+
+  // ✅ NUEVO CAMPO: ID de la semilla
+  @Column()
+  id_semilla: number;
+
+  @ManyToOne(() => Semilla)
+  @JoinColumn({ name: 'id_semilla' })
+  semilla: Semilla;
 
   @Column()
   id_cliente: number;

@@ -39,11 +39,33 @@ export class OrdenesSalidaService {
       for (const detalle of createOrdenSalidaDto.detalles) {
         const lote = await this.loteProduccionRepository.findOne({
           where: { id_lote_produccion: detalle.id_lote_produccion },
+          relations: [
+            'orden_ingreso',
+            'orden_ingreso.semillera',
+            'variedad',
+            'variedad.semilla',
+          ],
         });
 
         if (!lote) {
           throw new NotFoundException(
             `Lote ${detalle.id_lote_produccion} no encontrado`,
+          );
+        }
+
+        // ✅ VALIDAR que el lote pertenezca a la semillera seleccionada
+        if (
+          lote.orden_ingreso.id_semillera !== createOrdenSalidaDto.id_semillera
+        ) {
+          throw new BadRequestException(
+            `El lote ${lote.nro_lote} no pertenece a la semillera seleccionada`,
+          );
+        }
+
+        // ✅ VALIDAR que el lote pertenezca a la semilla seleccionada
+        if (lote.variedad.id_semilla !== createOrdenSalidaDto.id_semilla) {
+          throw new BadRequestException(
+            `El lote ${lote.nro_lote} no pertenece a la semilla seleccionada`,
           );
         }
 
@@ -111,6 +133,7 @@ export class OrdenesSalidaService {
     const queryBuilder = this.ordenSalidaRepository
       .createQueryBuilder('orden')
       .leftJoinAndSelect('orden.semillera', 'semillera')
+      .leftJoinAndSelect('orden.semilla', 'semilla') // ✅ AGREGAR JOIN
       .leftJoinAndSelect('orden.cliente', 'cliente')
       .leftJoinAndSelect('orden.conductor', 'conductor')
       .leftJoinAndSelect('orden.vehiculo', 'vehiculo')
@@ -121,7 +144,6 @@ export class OrdenesSalidaService {
       .leftJoinAndSelect('detalles.categoria', 'categoria')
       .leftJoinAndSelect('detalles.lote_produccion', 'lote_produccion');
 
-    // Si no es admin, filtrar por unidad
     if (rol !== 'admin' && idUnidadUsuario) {
       queryBuilder.where('orden.id_unidad = :idUnidad', {
         idUnidad: idUnidadUsuario,
@@ -129,6 +151,38 @@ export class OrdenesSalidaService {
     }
 
     queryBuilder.orderBy('orden.fecha_creacion', 'DESC');
+
+    return await queryBuilder.getMany();
+  }
+
+  async getLotesDisponiblesFiltrados(
+    idSemillera: number,
+    idSemilla: number,
+    rol: string,
+    idUnidadUsuario?: number,
+  ): Promise<LoteProduccion[]> {
+    const queryBuilder = this.loteProduccionRepository
+      .createQueryBuilder('lote')
+      .leftJoinAndSelect('lote.variedad', 'variedad')
+      .leftJoinAndSelect('variedad.semilla', 'semilla')
+      .leftJoinAndSelect('lote.categoria_salida', 'categoria_salida')
+      .leftJoinAndSelect('lote.unidad', 'unidad')
+      .leftJoinAndSelect('lote.orden_ingreso', 'orden_ingreso')
+      .leftJoinAndSelect('orden_ingreso.semillera', 'semillera')
+      .where('lote.estado IN (:...estados)', {
+        estados: ['disponible', 'parcialmente_vendido'],
+      })
+      .andWhere('lote.nro_bolsas > 0')
+      .andWhere('orden_ingreso.id_semillera = :idSemillera', { idSemillera })
+      .andWhere('variedad.id_semilla = :idSemilla', { idSemilla });
+
+    if (rol !== 'admin' && idUnidadUsuario) {
+      queryBuilder.andWhere('lote.id_unidad = :idUnidad', {
+        idUnidad: idUnidadUsuario,
+      });
+    }
+
+    queryBuilder.orderBy('lote.fecha_creacion', 'DESC');
 
     return await queryBuilder.getMany();
   }
@@ -149,7 +203,6 @@ export class OrdenesSalidaService {
       })
       .andWhere('lote.nro_bolsas > 0');
 
-    // Si no es admin, filtrar por unidad
     if (rol !== 'admin' && idUnidadUsuario) {
       queryBuilder.andWhere('lote.id_unidad = :idUnidad', {
         idUnidad: idUnidadUsuario,
@@ -214,6 +267,7 @@ export class OrdenesSalidaService {
       where: { id_orden_salida: id },
       relations: [
         'semillera',
+        'semilla',
         'cliente',
         'conductor',
         'vehiculo',

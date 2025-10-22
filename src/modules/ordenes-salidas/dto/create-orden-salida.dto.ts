@@ -1,71 +1,62 @@
 import {
+  IsNumber,
   IsString,
-  IsNotEmpty,
-  IsInt,
+  IsDateString,
   IsOptional,
-  MaxLength,
   IsArray,
   ValidateNested,
-  ArrayMinSize,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateDetalleOrdenSalidaDto {
-  @IsInt()
-  @IsNotEmpty()
+  @IsNumber()
   id_lote_produccion: number;
 
-  @IsInt()
-  @IsNotEmpty()
+  @IsNumber()
   id_variedad: number;
 
-  @IsInt()
-  @IsNotEmpty()
+  @IsNumber()
   id_categoria: number;
 
   @IsString()
-  @IsNotEmpty()
-  @MaxLength(50)
   nro_lote: string;
 
   @IsString()
   @IsOptional()
-  @MaxLength(100)
   tamano?: string;
 
-  @IsInt()
-  @IsNotEmpty()
+  @IsNumber()
   nro_bolsas: number;
 
-  @IsInt()
-  @IsNotEmpty()
+  @IsNumber()
   kg_bolsa: number;
 }
 
 export class CreateOrdenSalidaDto {
-  @IsInt()
-  @IsNotEmpty()
+  @IsNumber()
   id_semillera: number;
 
-  @IsInt()
-  @IsNotEmpty()
+  // ✅ NUEVO CAMPO
+  @IsNumber()
+  id_semilla: number;
+
+  @IsNumber()
   id_cliente: number;
 
-  @IsInt()
-  @IsNotEmpty()
+  @IsNumber()
   id_conductor: number;
 
-  @IsInt()
-  @IsNotEmpty()
+  @IsNumber()
   id_vehiculo: number;
 
-  @IsInt()
-  @IsNotEmpty()
+  @IsNumber()
   id_unidad: number;
+
+  @IsDateString()
+  fecha_salida: string;
 
   @IsString()
   @IsOptional()
-  @MaxLength(200)
   deposito?: string;
 
   @IsString()
@@ -73,16 +64,11 @@ export class CreateOrdenSalidaDto {
   observaciones?: string;
 
   @IsString()
-  @IsNotEmpty()
-  fecha_salida: string;
-
-  @IsString()
   @IsOptional()
   estado?: string;
 
   @IsArray()
   @ValidateNested({ each: true })
-  @ArrayMinSize(1)
   @Type(() => CreateDetalleOrdenSalidaDto)
   detalles: CreateDetalleOrdenSalidaDto[];
 }

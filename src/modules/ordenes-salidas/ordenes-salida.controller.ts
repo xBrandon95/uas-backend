@@ -47,7 +47,23 @@ export class OrdenesSalidaController {
     return this.ordenesSalidaService.findAll(user.rol, user.id_unidad);
   }
 
-  // Agregar nuevo endpoint para lotes disponibles
+  // ✅ NUEVO: Endpoint para lotes filtrados por semillera y semilla
+  @Get('lotes-disponibles-filtrados')
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
+  getLotesDisponiblesFiltrados(
+    @Query('idSemillera', ParseIntPipe) idSemillera: number,
+    @Query('idSemilla', ParseIntPipe) idSemilla: number,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<LoteProduccion[]> {
+    return this.ordenesSalidaService.getLotesDisponiblesFiltrados(
+      idSemillera,
+      idSemilla,
+      user.rol,
+      user.id_unidad,
+    );
+  }
+
+  // Endpoint original (mantener por compatibilidad)
   @Get('lotes-disponibles')
   @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   getLotesDisponibles(
