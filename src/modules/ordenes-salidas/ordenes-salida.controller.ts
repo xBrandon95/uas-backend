@@ -23,6 +23,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { OrdenSalida } from './entities/orden-salida.entity';
 import { type AuthenticatedUser } from '../../common/interfaces/auth.interface';
 import { LoteProduccion } from '../lotes-produccion/entities/lote-produccion.entity';
+import { PaginationDto } from '../cooperadores/dto/pagination.dto';
 
 @Controller('ordenes-salida')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -43,8 +44,15 @@ export class OrdenesSalidaController {
 
   @Get()
   @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
-  findAll(@CurrentUser() user: AuthenticatedUser): Promise<OrdenSalida[]> {
-    return this.ordenesSalidaService.findAll(user.rol, user.id_unidad);
+  findAll(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() paginationDto: PaginationDto, // ← Recibe page, limit, search
+  ) {
+    return this.ordenesSalidaService.findAll(
+      user.rol,
+      user.id_unidad,
+      paginationDto,
+    );
   }
 
   // ✅ NUEVO: Endpoint para lotes filtrados por semillera y semilla

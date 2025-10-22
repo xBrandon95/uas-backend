@@ -10,6 +10,7 @@ import { DetalleOrdenSalida } from './entities/detalle-orden-salida.entity';
 import { CreateOrdenSalidaDto } from './dto/create-orden-salida.dto';
 import { UpdateOrdenSalidaDto } from './dto/update-orden-salida.dto';
 import { LoteProduccion } from '../lotes-produccion/entities/lote-produccion.entity';
+import { PaginationDto } from '../cooperadores/dto/pagination.dto';
 
 @Injectable()
 export class OrdenesSalidaService {
@@ -129,11 +130,28 @@ export class OrdenesSalidaService {
   }
 
   // Modificar findAll para aceptar filtros por rol
-  async findAll(rol: string, idUnidadUsuario?: number): Promise<OrdenSalida[]> {
+  async findAll(
+    rol: string,
+    idUnidadUsuario?: number,
+    paginationDto?: PaginationDto,
+  ): Promise<{
+    data: OrdenSalida[];
+    meta: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+      hasNextPage: boolean;
+      hasPreviousPage: boolean;
+    };
+  }> {
+    const { search = '', page = 1, limit = 10 } = paginationDto || {};
+    const skip = (page - 1) * limit;
+
     const queryBuilder = this.ordenSalidaRepository
       .createQueryBuilder('orden')
       .leftJoinAndSelect('orden.semillera', 'semillera')
-      .leftJoinAndSelect('orden.semilla', 'semilla') // ✅ AGREGAR JOIN
+      .leftJoinAndSelect('orden.semilla', 'semilla')
       .leftJoinAndSelect('orden.cliente', 'cliente')
       .leftJoinAndSelect('orden.conductor', 'conductor')
       .leftJoinAndSelect('orden.vehiculo', 'vehiculo')
@@ -144,15 +162,44 @@ export class OrdenesSalidaService {
       .leftJoinAndSelect('detalles.categoria', 'categoria')
       .leftJoinAndSelect('detalles.lote_produccion', 'lote_produccion');
 
+    // 🔒 Filtro por unidad si no es admin
     if (rol !== 'admin' && idUnidadUsuario) {
       queryBuilder.where('orden.id_unidad = :idUnidad', {
         idUnidad: idUnidadUsuario,
       });
     }
 
+    // 🔍 Filtro por búsqueda opcional
+    if (search.trim()) {
+      const searchTerm = `%${search.trim()}%`;
+      queryBuilder.andWhere(
+        '(orden.codigo LIKE :search OR cliente.nombre LIKE :search OR unidad.nombre LIKE :search)',
+        { search: searchTerm },
+      );
+    }
+
+    // 🔽 Orden descendente por fecha
     queryBuilder.orderBy('orden.fecha_creacion', 'DESC');
 
-    return await queryBuilder.getMany();
+    // ⏩ Paginación
+    queryBuilder.skip(skip).take(limit);
+
+    // 📦 Obtener datos y total
+    const [data, total] = await queryBuilder.getManyAndCount();
+    const totalPages = Math.ceil(total / limit);
+
+    // 📊 Retornar estructura uniforme
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
   }
 
   async getLotesDisponiblesFiltrados(
