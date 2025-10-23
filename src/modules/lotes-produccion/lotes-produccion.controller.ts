@@ -22,6 +22,7 @@ import { Role } from '../../common/enums/roles.enum';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { LoteProduccion } from './entities/lote-produccion.entity';
 import { type AuthenticatedUser } from 'src/common/interfaces/auth.interface';
+import { PaginationDto } from '../cooperadores/dto/pagination.dto';
 
 @Controller('lotes-produccion')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -44,8 +45,17 @@ export class LotesProduccionController {
 
   @Get()
   @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
-  findAll(@CurrentUser() user: AuthenticatedUser): Promise<LoteProduccion[]> {
-    return this.lotesProduccionService.findAll(user.rol, user.id_unidad);
+  findAll(
+    @Query() paginationDto: PaginationDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<{ data: LoteProduccion[]; meta: any }> {
+    return this.lotesProduccionService.findAll(
+      paginationDto.page,
+      paginationDto.limit,
+      paginationDto.search,
+      user.rol,
+      user.id_unidad,
+    );
   }
 
   @Get('disponibles')

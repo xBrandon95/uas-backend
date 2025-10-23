@@ -45,7 +45,7 @@ export class SemillasService {
     }
 
     // Orden descendente por id
-    queryBuilder.orderBy('semilla.id_semilla', 'DESC');
+    queryBuilder.orderBy('semilla.nombre', 'ASC');
 
     // Paginación
     queryBuilder.skip(skip).take(limit);

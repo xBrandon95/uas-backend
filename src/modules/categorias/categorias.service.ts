@@ -46,7 +46,7 @@ export class CategoriasService {
     }
 
     // Orden descendente por id (igual que en unidades)
-    queryBuilder.orderBy('categoria.id_categoria', 'DESC');
+    queryBuilder.orderBy('categoria.nombre', 'ASC');
 
     // Paginación
     queryBuilder.skip(skip).take(limit);

@@ -22,6 +22,7 @@ import { Role } from '../../common/enums/roles.enum';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { type AuthenticatedUser } from '../../common/interfaces/auth.interface';
 import { OrdenIngreso } from './entities/orden-ingreso.entity';
+import { PaginationDto } from '../cooperadores/dto/pagination.dto';
 
 @Controller('ordenes-ingreso')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -45,15 +46,13 @@ export class OrdenesIngresoController {
   @Get()
   @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   findAll(
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
-    @Query('search') search: string = '',
+    @Query() paginationDto: PaginationDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<{ data: OrdenIngreso[]; meta: any }> {
     return this.ordenesIngresoService.findAll(
-      +page,
-      +limit,
-      search,
+      paginationDto.page,
+      paginationDto.limit,
+      paginationDto.search,
       user.rol,
       user.id_unidad,
     );

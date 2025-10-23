@@ -81,26 +81,75 @@ export class LotesProduccionService {
   }
 
   async findAll(
+    page: number = 1,
+    limit: number = 10,
+    search: string = '',
     rol: Role,
     idUnidadUsuario?: number,
-  ): Promise<LoteProduccion[]> {
+  ): Promise<{ data: LoteProduccion[]; meta: any }> {
+    const skip = (page - 1) * limit;
+
     const queryBuilder = this.loteProduccionRepository
       .createQueryBuilder('lote')
       .leftJoinAndSelect('lote.orden_ingreso', 'orden_ingreso')
       .leftJoinAndSelect('lote.variedad', 'variedad')
+      .leftJoinAndSelect('variedad.semilla', 'semilla')
       .leftJoinAndSelect('lote.categoria_salida', 'categoria_salida')
       .leftJoinAndSelect('lote.unidad', 'unidad')
       .leftJoinAndSelect('lote.usuario_creador', 'usuario_creador')
       .orderBy('lote.fecha_creacion', 'DESC');
 
+    // 🔹 Filtro por unidad (solo admin puede ver todas las unidades)
     if (rol !== Role.ADMIN && idUnidadUsuario) {
       queryBuilder.where('lote.id_unidad = :idUnidad', {
         idUnidad: idUnidadUsuario,
       });
     }
 
-    return await queryBuilder.getMany();
+    // 🔹 Búsqueda general
+    if (search) {
+      const whereCondition =
+        rol !== Role.ADMIN && idUnidadUsuario
+          ? 'lote.id_unidad = :idUnidad AND '
+          : '';
+
+      queryBuilder.andWhere(
+        `${whereCondition}(
+        lote.codigo_lote LIKE :search OR
+        variedad.nombre LIKE :search OR
+        categoria_salida.nombre LIKE :search OR
+        unidad.nombre LIKE :search OR
+        usuario_creador.nombre LIKE :search OR
+        orden_ingreso.numero_orden LIKE :search
+      )`,
+        {
+          search: `%${search}%`,
+          ...(idUnidadUsuario && { idUnidad: idUnidadUsuario }),
+        },
+      );
+    }
+
+    // 🔹 Obtener total y datos paginados
+    const [data, total] = await queryBuilder
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
   }
+
   async findByEstado(estado: string): Promise<LoteProduccion[]> {
     return await this.loteProduccionRepository.find({
       where: { estado },

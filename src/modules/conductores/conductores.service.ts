@@ -46,7 +46,7 @@ export class ConductoresService {
       );
     }
     // Orden alfabético por nombre
-    queryBuilder.orderBy('conductor.nombre', 'DESC');
+    queryBuilder.orderBy('conductor.id_conductor', 'DESC');
     // Paginación
     queryBuilder.skip(skip).take(limit);
 

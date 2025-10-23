@@ -34,7 +34,7 @@ export class VariedadesService {
       );
     }
     // Orden descendente por id
-    queryBuilder.orderBy('variedad.id_variedad', 'DESC');
+    queryBuilder.orderBy('semilla.nombre', 'ASC');
     // Paginación
     queryBuilder.skip(skip).take(limit);
 
