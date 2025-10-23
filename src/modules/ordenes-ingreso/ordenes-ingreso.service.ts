@@ -48,7 +48,15 @@ export class OrdenesIngresoService {
     return await this.ordenIngresoRepository.save(ordenIngreso);
   }
 
-  async findAll(rol: Role, idUnidadUsuario?: number): Promise<OrdenIngreso[]> {
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+    search: string = '',
+    rol: Role,
+    idUnidadUsuario?: number,
+  ): Promise<{ data: OrdenIngreso[]; meta: any }> {
+    const skip = (page - 1) * limit;
+
     const queryBuilder = this.ordenIngresoRepository
       .createQueryBuilder('orden')
       .leftJoinAndSelect('orden.semillera', 'semillera')
@@ -69,7 +77,49 @@ export class OrdenesIngresoService {
       });
     }
 
-    return await queryBuilder.getMany();
+    // Búsqueda
+    if (search) {
+      const whereCondition =
+        rol !== Role.ADMIN && idUnidadUsuario
+          ? 'orden.id_unidad = :idUnidad AND '
+          : '';
+
+      queryBuilder.andWhere(
+        `${whereCondition}(
+          orden.numero_orden LIKE :search OR
+          semillera.nombre LIKE :search OR
+          cooperador.nombre LIKE :search OR
+          semilla.nombre LIKE :search OR
+          variedad.nombre LIKE :search OR
+          conductor.nombre LIKE :search OR
+          vehiculo.placa LIKE :search
+        )`,
+        {
+          search: `%${search}%`,
+          ...(idUnidadUsuario && { idUnidad: idUnidadUsuario }),
+        },
+      );
+    }
+
+    // Obtener total y datos paginados
+    const [data, total] = await queryBuilder
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
   }
 
   async findByEstado(
@@ -305,7 +355,6 @@ export class OrdenesIngresoService {
     rol: Role,
     idUnidadUsuario?: number,
   ): Promise<any> {
-    // const ordenIngreso = await this.findOne(idOrdenIngreso);
     const ordenIngreso = await this.findOne(id, rol, idUnidadUsuario);
 
     const lotes = await this.loteProduccionRepository.find({

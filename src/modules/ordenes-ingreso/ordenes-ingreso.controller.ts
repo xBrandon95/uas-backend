@@ -44,8 +44,19 @@ export class OrdenesIngresoController {
 
   @Get()
   @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
-  findAll(@CurrentUser() user: AuthenticatedUser): Promise<OrdenIngreso[]> {
-    return this.ordenesIngresoService.findAll(user.rol, user.id_unidad);
+  findAll(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+    @Query('search') search: string = '',
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<{ data: OrdenIngreso[]; meta: any }> {
+    return this.ordenesIngresoService.findAll(
+      +page,
+      +limit,
+      search,
+      user.rol,
+      user.id_unidad,
+    );
   }
 
   @Get('estado/:estado')
