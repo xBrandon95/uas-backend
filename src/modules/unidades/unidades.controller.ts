@@ -39,6 +39,12 @@ export class UnidadesController {
     return this.unidadesService.findAll(paginationDto);
   }
 
+  @Get('all')
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
+  findAllNoPagination() {
+    return this.unidadesService.findAllNoPagination();
+  }
+
   @Get('activas')
   @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   findAllActive(): Promise<Unidad[]> {

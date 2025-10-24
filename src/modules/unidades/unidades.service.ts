@@ -66,6 +66,14 @@ export class UnidadesService {
     };
   }
 
+  async findAllNoPagination() {
+    return await this.unidadRepository
+      .createQueryBuilder('unidad')
+      .where('unidad.activo = :activo', { activo: true })
+      .orderBy('unidad.id_unidad', 'DESC')
+      .getMany();
+  }
+
   async findAllActive(): Promise<Unidad[]> {
     return await this.unidadRepository.find({
       where: { activo: true },
