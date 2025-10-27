@@ -41,8 +41,8 @@ export class CreateOrdenIngresoDto {
   id_categoria_ingreso: number;
 
   @IsInt()
-  @IsNotEmpty()
-  id_unidad: number;
+  @IsOptional()
+  id_unidad?: number;
 
   // Información de la semilla
   @IsString()

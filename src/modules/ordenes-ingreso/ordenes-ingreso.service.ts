@@ -27,14 +27,33 @@ export class OrdenesIngresoService {
     rol: Role,
     idUnidadUsuario?: number,
   ): Promise<OrdenIngreso> {
-    // Validar que el usuario solo pueda crear en su unidad (excepto admin)
-    if (rol !== Role.ADMIN && idUnidadUsuario) {
-      if (createOrdenIngresoDto.id_unidad !== idUnidadUsuario) {
+    let idUnidadFinal: number;
+
+    if (rol === Role.ADMIN) {
+      // ✅ El admin puede crear en cualquier unidad (debe venir en el DTO)
+      if (!createOrdenIngresoDto.id_unidad) {
+        throw new BadRequestException('Debe especificar una unidad');
+      }
+      idUnidadFinal = createOrdenIngresoDto.id_unidad;
+    } else {
+      // 🔒 Los demás roles deben crear solo en su propia unidad
+      if (!idUnidadUsuario) {
+        throw new ForbiddenException('No se encontró la unidad del usuario');
+      }
+
+      idUnidadFinal = idUnidadUsuario;
+
+      // Validar que no intente crear en otra unidad (aunque venga en el DTO)
+      if (
+        createOrdenIngresoDto.id_unidad &&
+        createOrdenIngresoDto.id_unidad !== idUnidadUsuario
+      ) {
         throw new ForbiddenException(
           'No puedes crear órdenes en otras unidades',
         );
       }
     }
+
     // Generar número de orden automático
     const numeroOrden = await this.generarNumeroOrden();
 
@@ -42,6 +61,7 @@ export class OrdenesIngresoService {
       ...createOrdenIngresoDto,
       numero_orden: numeroOrden,
       id_usuario_creador: idUsuarioCreador,
+      id_unidad: idUnidadFinal, // ✅ depende del rol
       estado: createOrdenIngresoDto.estado || 'pendiente',
     });
 
