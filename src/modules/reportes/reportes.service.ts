@@ -320,17 +320,23 @@ export class ReportesService {
               ],
               [
                 {
-                  text: `N° LOTE: ${orden.nro_lote_campo || 'N/A'}`,
-                  style: 'field',
+                  colSpan: 3,
+                  columns: [
+                    {
+                      text: `N° LOTE: ${orden.nro_lote_campo || 'N/A'}`,
+                      style: 'field',
+                      width: '50%',
+                    },
+                    {
+                      text: `N° CUPÓN: ${orden.nro_cupon || 'N/A'}`,
+                      style: 'field',
+                      width: '50%',
+                      alignment: 'left',
+                    },
+                  ],
                 },
-                {
-                  text: `N° BOLSAS: `,
-                  style: 'field',
-                },
-                {
-                  text: `N° CUPÓN: ${orden.nro_cupon || 'N/A'}`,
-                  style: 'field',
-                },
+                {},
+                {},
               ],
               [
                 {
