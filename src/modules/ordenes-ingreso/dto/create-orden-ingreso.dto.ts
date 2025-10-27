@@ -50,11 +50,6 @@ export class CreateOrdenIngresoDto {
   @MaxLength(100)
   nro_lote_campo?: string;
 
-  @IsInt()
-  @IsOptional()
-  @Min(1)
-  nro_bolsas?: number;
-
   @IsString()
   @IsOptional()
   @MaxLength(100)

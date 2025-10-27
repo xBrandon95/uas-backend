@@ -379,7 +379,6 @@ export class OrdenesIngresoService {
       orden_ingreso: {
         numero_orden: ordenIngreso.numero_orden,
         peso_neto: ordenIngreso.peso_neto,
-        nro_bolsas_ingresadas: ordenIngreso.nro_bolsas,
       },
       produccion: {
         total_kg_producido: totalKgProducido,

@@ -79,9 +79,6 @@ export class OrdenIngreso {
   @Column({ length: 100, nullable: true })
   nro_lote_campo: string;
 
-  @Column({ type: 'int', nullable: true })
-  nro_bolsas: number;
-
   @Column({ length: 100, nullable: true })
   nro_cupon: string;
 
