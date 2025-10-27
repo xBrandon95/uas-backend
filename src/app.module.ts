@@ -17,6 +17,7 @@ import { ClientesModule } from './modules/clientes/clientes.module';
 import { OrdenesIngresoModule } from './modules/ordenes-ingreso/ordenes-ingreso.module';
 import { LotesProduccionModule } from './modules/lotes-produccion/lotes-produccion.module';
 import { OrdenesSalidaModule } from './modules/ordenes-salidas/ordenes-salida.module';
+import { ReportesModule } from './modules/reportes/reportes.module';
 
 @Module({
   imports: [
@@ -40,6 +41,9 @@ import { OrdenesSalidaModule } from './modules/ordenes-salidas/ordenes-salida.mo
         logging: configService.get('database.logging'),
         timezone: 'Z',
         charset: 'utf8mb4',
+        migrations: [__dirname + '/../migrations/*.{ts,js}'],
+        migrationsRun: false,
+        autoLoadEntities: true,
       }),
     }),
 
@@ -58,6 +62,7 @@ import { OrdenesSalidaModule } from './modules/ordenes-salidas/ordenes-salida.mo
     OrdenesIngresoModule,
     LotesProduccionModule,
     OrdenesSalidaModule,
+    ReportesModule,
   ],
   controllers: [],
   providers: [],
