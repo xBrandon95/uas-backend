@@ -251,13 +251,19 @@ export class ReportesService {
             body: [
               [
                 {
-                  text: `SEMILLERA: ${orden.semillera?.nombre || 'N/A'}`,
+                  text: [
+                    { text: 'SEMILLERA: ', bold: true },
+                    { text: orden.semillera?.nombre || 'N/A' },
+                  ],
                   style: 'field',
                 },
               ],
               [
                 {
-                  text: `COOPERADOR: ${orden.cooperador?.nombre || 'N/A'}`,
+                  text: [
+                    { text: 'COOPERADOR: ', bold: true },
+                    { text: orden.cooperador?.nombre || 'N/A' },
+                  ],
                   style: 'field',
                 },
               ],
@@ -265,11 +271,17 @@ export class ReportesService {
                 {
                   columns: [
                     {
-                      text: `CHOFER: ${orden.conductor?.nombre || 'N/A'}`,
+                      text: [
+                        { text: 'CHOFER: ', bold: true },
+                        { text: orden.conductor?.nombre || 'N/A' },
+                      ],
                       style: 'field',
                     },
                     {
-                      text: `CI: ${orden.conductor?.ci || 'N/A'}`,
+                      text: [
+                        { text: 'CI: ', bold: true },
+                        { text: orden.conductor?.ci || 'N/A' },
+                      ],
                       style: 'field',
                     },
                   ],
@@ -279,13 +291,17 @@ export class ReportesService {
                 {
                   columns: [
                     {
-                      text: `VEHÍCULO: ${
-                        orden.vehiculo?.marca_modelo || 'N/A'
-                      }`,
+                      text: [
+                        { text: 'VEHÍCULO: ', bold: true },
+                        { text: orden.vehiculo?.marca_modelo || 'N/A' },
+                      ],
                       style: 'field',
                     },
                     {
-                      text: `PLACA: ${orden.vehiculo?.placa || 'N/A'}`,
+                      text: [
+                        { text: 'PLACA: ', bold: true },
+                        { text: orden.vehiculo?.placa || 'N/A' },
+                      ],
                       style: 'field',
                     },
                   ],
@@ -300,68 +316,106 @@ export class ReportesService {
         // Producto
         {
           table: {
-            widths: ['*', '*', '*'],
+            widths: ['*', '*', '*', '*', '*', '*'],
             body: [
+              // ─── Fila 1 ───
               [
                 {
-                  text: `PRODUCTO: ${orden.semilla?.nombre || 'N/A'}`,
-                  style: 'field',
-                },
-                {
-                  text: `VARIEDAD: ${orden.variedad?.nombre || 'N/A'}`,
-                  style: 'field',
-                },
-                {
-                  text: `CATEGORÍA: ${
-                    orden.categoria_ingreso?.nombre || 'N/A'
-                  }`,
-                  style: 'field',
-                },
-              ],
-              [
-                {
-                  colSpan: 3,
-                  columns: [
-                    {
-                      text: `N° LOTE: ${orden.nro_lote_campo || 'N/A'}`,
-                      style: 'field',
-                      width: '50%',
-                    },
-                    {
-                      text: `N° CUPÓN: ${orden.nro_cupon || 'N/A'}`,
-                      style: 'field',
-                      width: '50%',
-                      alignment: 'left',
-                    },
+                  text: [
+                    { text: 'PRODUCTO: ', bold: true },
+                    { text: orden.semilla?.nombre || 'N/A' },
                   ],
+                  style: 'field',
+                  colSpan: 2,
+                },
+                {},
+                {
+                  text: [
+                    { text: 'VARIEDAD: ', bold: true },
+                    { text: orden.variedad?.nombre || 'N/A' },
+                  ],
+                  style: 'field',
+                  colSpan: 2,
+                },
+                {},
+                {
+                  text: [
+                    { text: 'CATEGORÍA: ', bold: true },
+                    { text: orden.categoria_ingreso?.nombre || 'N/A' },
+                  ],
+                  style: 'field',
+                  colSpan: 2,
+                },
+                {},
+              ],
+
+              // ─── Fila 2 ───
+              [
+                {
+                  text: [
+                    { text: 'N° DE LOTE: ', bold: true },
+                    { text: orden.nro_lote_campo || 'N/A' },
+                  ],
+                  style: 'field',
+                  colSpan: 3,
+                },
+                {},
+                {},
+                {
+                  text: [
+                    { text: 'N° CUPÓN: ', bold: true },
+                    { text: orden.nro_cupon || 'N/A' },
+                  ],
+                  style: 'field',
+                  colSpan: 3,
                 },
                 {},
                 {},
               ],
+
+              // ─── Fila 3 ───
               [
                 {
-                  columns: [
-                    { text: `INGRESO: N/A`, style: 'field' },
-                    { text: `HORA: N/A`, style: 'field' },
-                  ],
+                  text: [{ text: 'INGRESO: ', bold: true }, { text: 'N/A' }],
+                  style: 'field',
                   colSpan: 3,
                 },
+                {},
+                {},
+                {
+                  text: [
+                    { text: 'HORA INGRESO: ', bold: true },
+                    { text: 'N/A' },
+                  ],
+                  style: 'field',
+                  colSpan: 3,
+                },
+                {},
+                {},
               ],
+
+              // ─── Fila 4 ───
               [
                 {
-                  columns: [
-                    { text: `SALIDA: N/A`, style: 'field' },
-                    {
-                      text: `HORA: ${orden.hora_salida || 'N/A'}`,
-                      style: 'field',
-                    },
-                  ],
+                  text: [{ text: 'SALIDA: ', bold: true }, { text: 'N/A' }],
+                  style: 'field',
                   colSpan: 3,
                 },
+                {},
+                {},
+                {
+                  text: [
+                    { text: 'HORA SALIDA: ', bold: true },
+                    { text: 'N/A' },
+                  ],
+                  style: 'field',
+                  colSpan: 3,
+                },
+                {},
+                {},
               ],
             ],
           },
-
           margin: [0, 5, 0, 5],
         },
 
@@ -384,35 +438,51 @@ export class ReportesService {
                 {
                   stack: [
                     {
-                      text: `PESO BRUTO: ${
-                        orden.peso_bruto != null
-                          ? Number(orden.peso_bruto).toFixed(2)
-                          : 'N/A'
-                      } kg`,
+                      text: [
+                        { text: 'PESO BRUTO: ', bold: true },
+                        {
+                          text:
+                            orden.peso_bruto != null
+                              ? `${Number(orden.peso_bruto).toFixed(2)} kg`
+                              : 'N/A',
+                        },
+                      ],
                       style: 'field',
                     },
                     {
-                      text: `PESO TARA: ${
-                        orden.peso_tara != null
-                          ? Number(orden.peso_tara).toFixed(2)
-                          : 'N/A'
-                      } kg`,
+                      text: [
+                        { text: 'TARA: ', bold: true },
+                        {
+                          text:
+                            orden.peso_tara != null
+                              ? `${Number(orden.peso_tara).toFixed(2)} kg`
+                              : 'N/A',
+                        },
+                      ],
                       style: 'field',
                     },
                     {
-                      text: `PESO NETO: ${
-                        orden.peso_neto != null
-                          ? Number(orden.peso_neto).toFixed(2)
-                          : 'N/A'
-                      } kg`,
+                      text: [
+                        { text: 'PESO NETO: ', bold: true },
+                        {
+                          text:
+                            orden.peso_neto != null
+                              ? `${Number(orden.peso_neto).toFixed(2)} kg`
+                              : 'N/A',
+                        },
+                      ],
                       style: 'field',
                     },
                     {
-                      text: `PESO LÍQUIDO: ${
-                        orden.peso_liquido != null
-                          ? Number(orden.peso_liquido).toFixed(2)
-                          : 'N/A'
-                      } kg`,
+                      text: [
+                        { text: 'PESO LIQUIDO: ', bold: true },
+                        {
+                          text:
+                            orden.peso_liquido != null
+                              ? `${Number(orden.peso_liquido).toFixed(2)} kg`
+                              : 'N/A',
+                        },
+                      ],
                       style: 'field',
                     },
                   ],
@@ -420,43 +490,73 @@ export class ReportesService {
                 {
                   stack: [
                     {
-                      text: `HUMEDAD: ${
-                        orden.porcentaje_humedad != null
-                          ? Number(orden.porcentaje_humedad).toFixed(2)
-                          : 'N/A'
-                      } %`,
+                      text: [
+                        { text: 'HUMEDAD: ', bold: true },
+                        {
+                          text:
+                            orden.porcentaje_humedad != null
+                              ? `${Number(orden.porcentaje_humedad).toFixed(
+                                  2,
+                                )} %`
+                              : 'N/A',
+                        },
+                      ],
                       style: 'field',
                     },
                     {
-                      text: `IMPUREZA: ${
-                        orden.porcentaje_impureza != null
-                          ? Number(orden.porcentaje_impureza).toFixed(2)
-                          : 'N/A'
-                      } %`,
+                      text: [
+                        { text: 'IMPUREZAS: ', bold: true },
+                        {
+                          text:
+                            orden.porcentaje_impureza != null
+                              ? `${Number(orden.porcentaje_impureza).toFixed(
+                                  2,
+                                )} %`
+                              : 'N/A',
+                        },
+                      ],
                       style: 'field',
                     },
                     {
-                      text: `PESO HECTOLÍTRICO: ${
-                        orden.peso_hectolitrico != null
-                          ? Number(orden.peso_hectolitrico).toFixed(2)
-                          : 'N/A'
-                      } %`,
+                      text: [
+                        { text: 'PESO HECTOLITRICO: ', bold: true },
+                        {
+                          text:
+                            orden.peso_hectolitrico != null
+                              ? `${Number(orden.peso_hectolitrico).toFixed(
+                                  2,
+                                )} kg`
+                              : 'N/A',
+                        },
+                      ],
                       style: 'field',
                     },
                     {
-                      text: `GRANO DAÑADO: ${
-                        orden.porcentaje_grano_danado != null
-                          ? Number(orden.porcentaje_grano_danado).toFixed(2)
-                          : 'N/A'
-                      } %`,
+                      text: [
+                        { text: 'GRANO DAÑADO: ', bold: true },
+                        {
+                          text:
+                            orden.porcentaje_grano_danado != null
+                              ? `${Number(
+                                  orden.porcentaje_grano_danado,
+                                ).toFixed(2)} %`
+                              : 'N/A',
+                        },
+                      ],
                       style: 'field',
                     },
                     {
-                      text: `GRANO VERDE: ${
-                        orden.porcentaje_grano_verde != null
-                          ? Number(orden.porcentaje_grano_verde).toFixed(2)
-                          : 'N/A'
-                      } %`,
+                      text: [
+                        { text: 'GRANO VERDE: ', bold: true },
+                        {
+                          text:
+                            orden.porcentaje_grano_verde != null
+                              ? `${Number(orden.porcentaje_grano_verde).toFixed(
+                                  2,
+                                )} %`
+                              : 'N/A',
+                        },
+                      ],
                       style: 'field',
                     },
                   ],
@@ -476,7 +576,10 @@ export class ReportesService {
                   body: [
                     [
                       {
-                        text: `OBSERVACIONES: ${orden.observaciones}`,
+                        text: [
+                          { text: 'OBSERVACIONES: ', bold: true },
+                          { text: orden.observaciones || 'N/A' },
+                        ],
                         style: 'field',
                       },
                     ],
@@ -692,13 +795,19 @@ export class ReportesService {
             body: [
               [
                 {
-                  text: `SEMILLERA: ${orden.semillera?.nombre || 'N/A'}`,
+                  text: [
+                    { text: 'SEMILLERA: ', bold: true },
+                    { text: orden.semillera?.nombre || 'N/A' },
+                  ],
                   style: 'field',
                 },
               ],
               [
                 {
-                  text: `CLIENTE: ${orden.cliente?.nombre || 'N/A'}`,
+                  text: [
+                    { text: 'CLIENTE: ', bold: true },
+                    { text: orden.cliente?.nombre || 'N/A' },
+                  ],
                   style: 'field',
                 },
               ],
@@ -706,11 +815,17 @@ export class ReportesService {
                 {
                   columns: [
                     {
-                      text: `CHOFER: ${orden.conductor?.nombre || 'N/A'}`,
+                      text: [
+                        { text: 'CHOFER: ', bold: true },
+                        { text: orden.conductor?.nombre || 'N/A' },
+                      ],
                       style: 'field',
                     },
                     {
-                      text: `CI: ${orden.conductor?.ci || 'N/A'}`,
+                      text: [
+                        { text: 'CI: ', bold: true },
+                        { text: orden.conductor?.ci || 'N/A' },
+                      ],
                       style: 'field',
                     },
                   ],
@@ -720,13 +835,17 @@ export class ReportesService {
                 {
                   columns: [
                     {
-                      text: `VEHÍCULO: ${
-                        orden.vehiculo?.marca_modelo || 'N/A'
-                      }`,
+                      text: [
+                        { text: 'VEHÍCULO: ', bold: true },
+                        { text: orden.vehiculo?.marca_modelo || 'N/A' },
+                      ],
                       style: 'field',
                     },
                     {
-                      text: `PLACA: ${orden.vehiculo?.placa || 'N/A'}`,
+                      text: [
+                        { text: 'PLACA: ', bold: true },
+                        { text: orden.vehiculo?.placa || 'N/A' },
+                      ],
                       style: 'field',
                     },
                   ],
@@ -736,11 +855,17 @@ export class ReportesService {
                 {
                   columns: [
                     {
-                      text: `PRODUCTO: ${orden.semilla?.nombre || 'N/A'}`,
+                      text: [
+                        { text: 'PRODUCTO: ', bold: true },
+                        { text: orden.semilla?.nombre || 'N/A' },
+                      ],
                       style: 'field',
                     },
                     {
-                      text: `DEPÓSITO: ${orden.deposito || 'N/A'}`,
+                      text: [
+                        { text: 'DEPÓSITO: ', bold: true },
+                        { text: orden.deposito || 'N/A' },
+                      ],
                       style: 'field',
                     },
                   ],
@@ -774,7 +899,10 @@ export class ReportesService {
             body: [
               [
                 {
-                  text: `OBSERVACIONES: ${orden.observaciones}`,
+                  text: [
+                    { text: 'OBSERVACIONES: ', bold: true },
+                    { text: orden.observaciones || 'N/A' },
+                  ],
                   style: 'field',
                 },
               ],
