@@ -35,6 +35,14 @@ export class LotesProduccionService {
       );
     }
 
+    // 🚫 VALIDACIÓN: No permitir crear lotes si la orden está cancelada
+    if (ordenIngreso.estado === 'cancelado') {
+      throw new BadRequestException(
+        'No se pueden crear lotes de producción en una orden cancelada. ' +
+          'Primero debe cambiar el estado de la orden.',
+      );
+    }
+
     // 2. Calcular total ya producido de esta orden
     const lotesExistentes = await this.loteProduccionRepository.find({
       where: { id_orden_ingreso: createLoteProduccionDto.id_orden_ingreso },
@@ -56,11 +64,12 @@ export class LotesProduccionService {
       throw new BadRequestException(
         `No se puede crear el lote. ` +
           `Peso neto orden de ingreso: ${ordenIngreso.peso_neto} kg. ` +
-          `Ya producido: ${totalKgProducido} kg. ` +
-          `Nuevo lote: ${nuevoLoteKg} kg. ` +
-          `Total sería: ${totalDespuesDeCrear} kg (excede en ${
+          `Ya producido: ${totalKgProducido.toFixed(2)} kg. ` +
+          `Nuevo lote: ${nuevoLoteKg.toFixed(2)} kg. ` +
+          `Total sería: ${totalDespuesDeCrear.toFixed(2)} kg ` +
+          `(excede en ${(
             totalDespuesDeCrear - Number(ordenIngreso.peso_neto)
-          } kg)`,
+          ).toFixed(2)} kg)`,
       );
     }
 
@@ -79,24 +88,71 @@ export class LotesProduccionService {
       estado: createLoteProduccionDto.estado || 'disponible',
     });
 
-    const loteSave = await this.loteProduccionRepository.save(loteProduccion);
+    const loteGuardado = await this.loteProduccionRepository.save(
+      loteProduccion,
+    );
 
-    // ✅ 7. NUEVO: Verificar si se completó la orden de ingreso
+    // ✅ 7. ACTUALIZAR ESTADO DE LA ORDEN AUTOMÁTICAMENTE
+    await this.actualizarEstadoOrden(ordenIngreso.id_orden_ingreso);
+
+    return loteGuardado;
+  }
+
+  // ✅ MÉTODO CENTRALIZADO PARA ACTUALIZAR ESTADO DE ORDEN
+  private async actualizarEstadoOrden(idOrden: number): Promise<void> {
+    const ordenIngreso = await this.ordenIngresoRepository.findOne({
+      where: { id_orden_ingreso: idOrden },
+    });
+
+    if (!ordenIngreso) {
+      return;
+    }
+
+    // No actualizar automáticamente si está cancelada (solo manual)
+    if (ordenIngreso.estado === 'cancelado') {
+      return;
+    }
+
+    const lotes = await this.loteProduccionRepository.find({
+      where: { id_orden_ingreso: idOrden },
+    });
+
+    const totalKgProducido = lotes.reduce(
+      (sum, lote) => sum + Number(lote.total_kg),
+      0,
+    );
+
     const porcentajeUtilizado =
-      (totalDespuesDeCrear / Number(ordenIngreso.peso_neto)) * 100;
+      (totalKgProducido / Number(ordenIngreso.peso_neto)) * 100;
 
-    // Si se utilizó el 100% del peso neto, marcar como completado
-    if (porcentajeUtilizado >= 100) {
+    // LÓGICA DE TRANSICIÓN AUTOMÁTICA DE ESTADOS
+    const estadoAnterior = ordenIngreso.estado;
+
+    if (lotes.length === 0) {
+      // Sin lotes → Pendiente
+      ordenIngreso.estado = 'pendiente';
+    } else if (porcentajeUtilizado >= 100) {
+      // 100% utilizado → Completado
       ordenIngreso.estado = 'completado';
-      await this.ordenIngresoRepository.save(ordenIngreso);
-    }
-    // Si es la primera vez que se crea un lote y no está completado, cambiar a "en_proceso"
-    else if (ordenIngreso.estado === 'pendiente') {
-      ordenIngreso.estado = 'en_proceso';
-      await this.ordenIngresoRepository.save(ordenIngreso);
+    } else if (lotes.length > 0 && porcentajeUtilizado < 100) {
+      // Tiene lotes pero no al 100% → En proceso
+      if (ordenIngreso.estado !== 'completado') {
+        // No sobrescribir si fue marcado manualmente como completado
+        ordenIngreso.estado = 'en_proceso';
+      }
     }
 
-    return loteSave;
+    // Log para auditoría
+    if (estadoAnterior !== ordenIngreso.estado) {
+      console.log(
+        `[AUTO] Orden ${ordenIngreso.numero_orden}: ${estadoAnterior} → ${ordenIngreso.estado} ` +
+          `(${porcentajeUtilizado.toFixed(2)}% utilizado, ${
+            lotes.length
+          } lote(s))`,
+      );
+    }
+
+    await this.ordenIngresoRepository.save(ordenIngreso);
   }
 
   async findAll(
@@ -118,14 +174,14 @@ export class LotesProduccionService {
       .leftJoinAndSelect('lote.usuario_creador', 'usuario_creador')
       .orderBy('lote.fecha_creacion', 'DESC');
 
-    // 🔹 Filtro por unidad (solo admin puede ver todas las unidades)
+    // Filtro por unidad (solo admin puede ver todas las unidades)
     if (rol !== Role.ADMIN && idUnidadUsuario) {
       queryBuilder.where('lote.id_unidad = :idUnidad', {
         idUnidad: idUnidadUsuario,
       });
     }
 
-    // 🔹 Búsqueda general
+    // Búsqueda general
     if (search) {
       const whereCondition =
         rol !== Role.ADMIN && idUnidadUsuario
@@ -134,7 +190,7 @@ export class LotesProduccionService {
 
       queryBuilder.andWhere(
         `${whereCondition}(
-        lote.codigo_lote LIKE :search OR
+        lote.nro_lote LIKE :search OR
         variedad.nombre LIKE :search OR
         categoria_salida.nombre LIKE :search OR
         unidad.nombre LIKE :search OR
@@ -148,7 +204,6 @@ export class LotesProduccionService {
       );
     }
 
-    // 🔹 Obtener total y datos paginados
     const [data, total] = await queryBuilder
       .skip(skip)
       .take(limit)
@@ -268,7 +323,12 @@ export class LotesProduccionService {
     }
 
     Object.assign(lote, updateLoteProduccionDto);
-    return await this.loteProduccionRepository.save(lote);
+    const loteActualizado = await this.loteProduccionRepository.save(lote);
+
+    // ✅ Recalcular estado de la orden
+    await this.actualizarEstadoOrden(lote.id_orden_ingreso);
+
+    return loteActualizado;
   }
 
   async cambiarEstado(
@@ -277,7 +337,13 @@ export class LotesProduccionService {
   ): Promise<LoteProduccion> {
     const lote = await this.findOne(id);
 
-    const estadosValidos = ['disponible', 'reservado', 'vendido', 'descartado'];
+    const estadosValidos = [
+      'disponible',
+      'reservado',
+      'parcialmente_vendido',
+      'vendido',
+      'descartado',
+    ];
     if (!estadosValidos.includes(nuevoEstado)) {
       throw new BadRequestException('Estado no válido');
     }
@@ -295,45 +361,10 @@ export class LotesProduccionService {
 
     const idOrdenIngreso = lote.id_orden_ingreso;
 
-    // Eliminar el lote
     await this.loteProduccionRepository.remove(lote);
 
-    // ✅ Recalcular estado de la orden
-    const ordenIngreso = await this.ordenIngresoRepository.findOne({
-      where: { id_orden_ingreso: idOrdenIngreso },
-    });
-
-    if (ordenIngreso) {
-      const lotesRestantes = await this.loteProduccionRepository.find({
-        where: { id_orden_ingreso: idOrdenIngreso },
-      });
-
-      const totalKgProducido = lotesRestantes.reduce(
-        (sum, l) => sum + Number(l.total_kg),
-        0,
-      );
-
-      const porcentajeUtilizado =
-        (totalKgProducido / Number(ordenIngreso.peso_neto)) * 100;
-
-      // Si ya no hay lotes, volver a pendiente
-      if (lotesRestantes.length === 0) {
-        ordenIngreso.estado = 'pendiente';
-      }
-      // Si hay lotes pero no está al 100%, poner en proceso
-      else if (
-        porcentajeUtilizado < 100 &&
-        ordenIngreso.estado === 'completado'
-      ) {
-        ordenIngreso.estado = 'en_proceso';
-      }
-      // Si llegó al 100%, marcar como completado
-      else if (porcentajeUtilizado >= 100) {
-        ordenIngreso.estado = 'completado';
-      }
-
-      await this.ordenIngresoRepository.save(ordenIngreso);
-    }
+    // ✅ Recalcular estado de la orden automáticamente
+    await this.actualizarEstadoOrden(idOrdenIngreso);
   }
 
   private async generarNumeroLote(): Promise<string> {

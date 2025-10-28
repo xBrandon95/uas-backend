@@ -104,6 +104,19 @@ export class OrdenesIngresoController {
     );
   }
 
+  @Get(':id/resumen-produccion')
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
+  getResumenProduccion(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<any> {
+    return this.ordenesIngresoService.getResumenProduccion(
+      id,
+      user.rol,
+      user.id_unidad,
+    );
+  }
+
   @Get('numero/:numeroOrden')
   @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   findByNumeroOrden(
