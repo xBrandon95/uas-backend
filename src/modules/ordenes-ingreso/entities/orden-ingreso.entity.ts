@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { Semillera } from '../../semilleras/entities/semillera.entity';
 import { Cooperador } from '../../cooperadores/entities/cooperador.entity';
@@ -16,6 +17,7 @@ import { Variedad } from '../../variedades/entities/variedad.entity';
 import { Categoria } from '../../categorias/entities/categoria.entity';
 import { Unidad } from '../../unidades/entities/unidad.entity';
 import { Usuario } from '../../usuarios/entities/usuario.entity';
+import { LoteProduccion } from 'src/modules/lotes-produccion/entities/lote-produccion.entity';
 
 @Entity('ordenes_ingreso')
 export class OrdenIngreso {
@@ -151,4 +153,7 @@ export class OrdenIngreso {
 
   @UpdateDateColumn()
   fecha_actualizacion: Date;
+
+  @OneToMany(() => LoteProduccion, (lote) => lote.orden_ingreso)
+  lotes_produccion: LoteProduccion[];
 }

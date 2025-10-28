@@ -88,16 +88,17 @@ export class OrdenesIngresoService {
       .leftJoinAndSelect('orden.categoria_ingreso', 'categoria_ingreso')
       .leftJoinAndSelect('orden.unidad', 'unidad')
       .leftJoinAndSelect('orden.usuario_creador', 'usuario_creador')
+      // ✅ NUEVO: Contar lotes asociados
+      .loadRelationCountAndMap('orden.cantidad_lotes', 'orden.lotes_produccion')
       .orderBy('orden.fecha_creacion', 'DESC');
 
-    // FILTRO POR UNIDAD: Solo admin puede ver todas las unidades
+    // Filtros existentes...
     if (rol !== Role.ADMIN && idUnidadUsuario) {
       queryBuilder.where('orden.id_unidad = :idUnidad', {
         idUnidad: idUnidadUsuario,
       });
     }
 
-    // Búsqueda
     if (search) {
       const whereCondition =
         rol !== Role.ADMIN && idUnidadUsuario
@@ -106,14 +107,14 @@ export class OrdenesIngresoService {
 
       queryBuilder.andWhere(
         `${whereCondition}(
-          orden.numero_orden LIKE :search OR
-          semillera.nombre LIKE :search OR
-          cooperador.nombre LIKE :search OR
-          semilla.nombre LIKE :search OR
-          variedad.nombre LIKE :search OR
-          conductor.nombre LIKE :search OR
-          vehiculo.placa LIKE :search
-        )`,
+        orden.numero_orden LIKE :search OR
+        semillera.nombre LIKE :search OR
+        cooperador.nombre LIKE :search OR
+        semilla.nombre LIKE :search OR
+        variedad.nombre LIKE :search OR
+        conductor.nombre LIKE :search OR
+        vehiculo.placa LIKE :search
+      )`,
         {
           search: `%${search}%`,
           ...(idUnidadUsuario && { idUnidad: idUnidadUsuario }),
@@ -121,16 +122,23 @@ export class OrdenesIngresoService {
       );
     }
 
-    // Obtener total y datos paginados
     const [data, total] = await queryBuilder
       .skip(skip)
       .take(limit)
       .getManyAndCount();
 
+    // ✅ Agregar flag calculado
+    const dataConFlags = data.map((orden) => ({
+      ...orden,
+      tiene_lotes_produccion: (orden as any).cantidad_lotes > 0,
+      puede_editarse:
+        orden.estado !== 'completado' && (orden as any).cantidad_lotes === 0,
+    }));
+
     const totalPages = Math.ceil(total / limit);
 
     return {
-      data,
+      data: dataConFlags,
       meta: {
         total,
         page,
@@ -279,15 +287,54 @@ export class OrdenesIngresoService {
   ): Promise<OrdenIngreso> {
     const ordenIngreso = await this.findOne(id, rol, idUnidadUsuario);
 
-    // Validar que la orden esté en estado editable
+    // No editar órdenes completadas
     if (ordenIngreso.estado === 'completado') {
       throw new BadRequestException(
         'No se puede modificar una orden completada',
       );
     }
 
+    // No editar si tiene lotes de producción
+    const lotesAsociados = await this.loteProduccionRepository.count({
+      where: { id_orden_ingreso: id },
+    });
+
+    if (lotesAsociados > 0) {
+      throw new BadRequestException(
+        `No se puede editar esta orden porque tiene ${lotesAsociados} lote(s) de producción asociado(s). ` +
+          `Si necesitas hacer cambios, primero debes eliminar los lotes de producción.`,
+      );
+    }
+
     Object.assign(ordenIngreso, updateOrdenIngresoDto);
     return await this.ordenIngresoRepository.save(ordenIngreso);
+  }
+
+  async puedeEditarse(id: number): Promise<{ puede: boolean; razon?: string }> {
+    const orden = await this.ordenIngresoRepository.findOne({
+      where: { id_orden_ingreso: id },
+    });
+
+    if (!orden) {
+      return { puede: false, razon: 'Orden no encontrada' };
+    }
+
+    if (orden.estado === 'completado') {
+      return { puede: false, razon: 'La orden está completada' };
+    }
+
+    const lotesCount = await this.loteProduccionRepository.count({
+      where: { id_orden_ingreso: id },
+    });
+
+    if (lotesCount > 0) {
+      return {
+        puede: false,
+        razon: `Tiene ${lotesCount} lote(s) de producción asociado(s)`,
+      };
+    }
+
+    return { puede: true };
   }
 
   async cambiarEstado(
@@ -315,15 +362,27 @@ export class OrdenesIngresoService {
   async remove(id: number, rol: Role, idUnidadUsuario?: number): Promise<void> {
     const ordenIngreso = await this.findOne(id, rol, idUnidadUsuario);
 
+    // No eliminar si está completada
     if (ordenIngreso.estado === 'completado') {
       throw new BadRequestException(
         'No se puede eliminar una orden completada',
       );
     }
 
+    // No eliminar si tiene lotes
+    const lotesAsociados = await this.loteProduccionRepository.count({
+      where: { id_orden_ingreso: id },
+    });
+
+    if (lotesAsociados > 0) {
+      throw new BadRequestException(
+        `No se puede eliminar esta orden porque tiene ${lotesAsociados} lote(s) de producción asociado(s). ` +
+          `Primero debes eliminar todos los lotes de producción.`,
+      );
+    }
+
     await this.ordenIngresoRepository.remove(ordenIngreso);
   }
-
   private async generarNumeroOrden(): Promise<string> {
     const fecha = new Date();
     const year = fecha.getFullYear();

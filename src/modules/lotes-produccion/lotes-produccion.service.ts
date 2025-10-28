@@ -58,14 +58,16 @@ export class LotesProduccionService {
           `Peso neto orden de ingreso: ${ordenIngreso.peso_neto} kg. ` +
           `Ya producido: ${totalKgProducido} kg. ` +
           `Nuevo lote: ${nuevoLoteKg} kg. ` +
-          `Total sería: ${totalDespuesDeCrear} kg (excede en ${totalDespuesDeCrear - Number(ordenIngreso.peso_neto)} kg)`,
+          `Total sería: ${totalDespuesDeCrear} kg (excede en ${
+            totalDespuesDeCrear - Number(ordenIngreso.peso_neto)
+          } kg)`,
       );
     }
 
-    // Generar número de lote automático
+    // 5. Generar número de lote automático
     const numeroLote = await this.generarNumeroLote();
 
-    // Calcular total_kg
+    // 6. Calcular total_kg
     const totalKg =
       createLoteProduccionDto.nro_bolsas * createLoteProduccionDto.kg_por_bolsa;
 
@@ -77,7 +79,24 @@ export class LotesProduccionService {
       estado: createLoteProduccionDto.estado || 'disponible',
     });
 
-    return await this.loteProduccionRepository.save(loteProduccion);
+    const loteSave = await this.loteProduccionRepository.save(loteProduccion);
+
+    // ✅ 7. NUEVO: Verificar si se completó la orden de ingreso
+    const porcentajeUtilizado =
+      (totalDespuesDeCrear / Number(ordenIngreso.peso_neto)) * 100;
+
+    // Si se utilizó el 100% del peso neto, marcar como completado
+    if (porcentajeUtilizado >= 100) {
+      ordenIngreso.estado = 'completado';
+      await this.ordenIngresoRepository.save(ordenIngreso);
+    }
+    // Si es la primera vez que se crea un lote y no está completado, cambiar a "en_proceso"
+    else if (ordenIngreso.estado === 'pendiente') {
+      ordenIngreso.estado = 'en_proceso';
+      await this.ordenIngresoRepository.save(ordenIngreso);
+    }
+
+    return loteSave;
   }
 
   async findAll(
@@ -274,7 +293,47 @@ export class LotesProduccionService {
       throw new BadRequestException('No se puede eliminar un lote vendido');
     }
 
+    const idOrdenIngreso = lote.id_orden_ingreso;
+
+    // Eliminar el lote
     await this.loteProduccionRepository.remove(lote);
+
+    // ✅ Recalcular estado de la orden
+    const ordenIngreso = await this.ordenIngresoRepository.findOne({
+      where: { id_orden_ingreso: idOrdenIngreso },
+    });
+
+    if (ordenIngreso) {
+      const lotesRestantes = await this.loteProduccionRepository.find({
+        where: { id_orden_ingreso: idOrdenIngreso },
+      });
+
+      const totalKgProducido = lotesRestantes.reduce(
+        (sum, l) => sum + Number(l.total_kg),
+        0,
+      );
+
+      const porcentajeUtilizado =
+        (totalKgProducido / Number(ordenIngreso.peso_neto)) * 100;
+
+      // Si ya no hay lotes, volver a pendiente
+      if (lotesRestantes.length === 0) {
+        ordenIngreso.estado = 'pendiente';
+      }
+      // Si hay lotes pero no está al 100%, poner en proceso
+      else if (
+        porcentajeUtilizado < 100 &&
+        ordenIngreso.estado === 'completado'
+      ) {
+        ordenIngreso.estado = 'en_proceso';
+      }
+      // Si llegó al 100%, marcar como completado
+      else if (porcentajeUtilizado >= 100) {
+        ordenIngreso.estado = 'completado';
+      }
+
+      await this.ordenIngresoRepository.save(ordenIngreso);
+    }
   }
 
   private async generarNumeroLote(): Promise<string> {
