@@ -71,6 +71,17 @@ export class OrdenesIngresoController {
     );
   }
 
+  @Get('disponibles-para-lotes')
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
+  findDisponiblesParaLotes(
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<OrdenIngreso[]> {
+    return this.ordenesIngresoService.findDisponiblesParaLotes(
+      user.rol,
+      user.id_unidad,
+    );
+  }
+
   @Get('unidad/:idUnidad')
   @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   findByUnidad(

@@ -298,31 +298,26 @@ export class OrdenesIngresoService {
   ): Promise<OrdenIngreso> {
     const ordenIngreso = await this.findOne(id, rol, idUnidadUsuario);
 
-    const estadosValidos = [
-      'pendiente',
-      'en_proceso',
-      'completado',
-      'cancelado',
-    ];
-    if (!estadosValidos.includes(nuevoEstado)) {
-      throw new BadRequestException('Estado no válido');
+    // ✅ RESTRICCIÓN 1: Solo permitir cambios manuales a "completado" o "cancelado"
+    const estadosPermitidosManualmente = ['completado', 'cancelado'];
+    if (!estadosPermitidosManualmente.includes(nuevoEstado)) {
+      throw new BadRequestException(
+        'Solo puedes cambiar manualmente el estado a "Completado" o "Cancelado"',
+      );
     }
 
-    // ✅ VALIDACIÓN 1: No permitir reactivar una orden cancelada que tiene lotes
-    if (ordenIngreso.estado === 'cancelado' && nuevoEstado !== 'cancelado') {
-      const lotesCount = await this.loteProduccionRepository.count({
-        where: { id_orden_ingreso: id },
-      });
-
-      if (lotesCount > 0) {
-        throw new BadRequestException(
-          `No se puede cambiar el estado de una orden cancelada que tiene ${lotesCount} lote(s) asociado(s). ` +
-            'Primero elimine todos los lotes de producción.',
-        );
-      }
+    // ✅ RESTRICCIÓN 2: No permitir cambios si ya está "completado" o "cancelado"
+    if (
+      ordenIngreso.estado === 'completado' ||
+      ordenIngreso.estado === 'cancelado'
+    ) {
+      throw new BadRequestException(
+        `No se puede cambiar el estado de una orden que ya está "${ordenIngreso.estado}". ` +
+          'Esta acción es irreversible.',
+      );
     }
 
-    // ✅ VALIDACIÓN 2: No permitir cancelar si tiene lotes
+    // ✅ VALIDACIÓN: No permitir cancelar si tiene lotes
     if (nuevoEstado === 'cancelado') {
       const lotesCount = await this.loteProduccionRepository.count({
         where: { id_orden_ingreso: id },
@@ -336,8 +331,8 @@ export class OrdenesIngresoService {
       }
     }
 
-    // ✅ VALIDACIÓN 3: Advertencia al marcar como completado manualmente
-    if (nuevoEstado === 'completado' && ordenIngreso.estado !== 'completado') {
+    // ✅ VALIDACIÓN: Advertencia al marcar como completado manualmente
+    if (nuevoEstado === 'completado') {
       const lotes = await this.loteProduccionRepository.find({
         where: { id_orden_ingreso: id },
       });
@@ -357,34 +352,12 @@ export class OrdenesIngresoService {
       const porcentaje =
         (totalKgProducido / Number(ordenIngreso.peso_neto)) * 100;
 
-      if (porcentaje < 100) {
-        // Log para auditoría
-        console.warn(
-          `[MANUAL] Orden ${ordenIngreso.numero_orden} marcada como completada ` +
-            `con ${porcentaje.toFixed(
-              2,
-            )}% del peso utilizado (${totalKgProducido.toFixed(2)}/${
-              ordenIngreso.peso_neto
-            } kg)`,
-        );
-      }
-    }
-
-    // ✅ VALIDACIÓN 4: Validar transiciones de estados lógicas
-    const transicionesPermitidas: Record<string, string[]> = {
-      pendiente: ['en_proceso', 'cancelado', 'completado'],
-      en_proceso: ['completado', 'cancelado', 'pendiente'],
-      completado: ['en_proceso', 'cancelado'], // Permitir revertir si es necesario
-      cancelado: ['pendiente'], // Solo si no tiene lotes
-    };
-
-    const transicionesValidas =
-      transicionesPermitidas[ordenIngreso.estado] || [];
-
-    if (!transicionesValidas.includes(nuevoEstado)) {
-      throw new BadRequestException(
-        `No se puede cambiar del estado "${ordenIngreso.estado}" a "${nuevoEstado}". ` +
-          `Transiciones válidas: ${transicionesValidas.join(', ')}`,
+      // Log para auditoría
+      console.log(
+        `[MANUAL] Orden ${ordenIngreso.numero_orden} marcada como completada manualmente. ` +
+          `Peso utilizado: ${porcentaje.toFixed(
+            2,
+          )}% (${totalKgProducido.toFixed(2)}/${ordenIngreso.peso_neto} kg)`,
       );
     }
 
@@ -397,7 +370,7 @@ export class OrdenesIngresoService {
 
     // Log para auditoría
     console.log(
-      `[MANUAL] Orden ${ordenIngreso.numero_orden}: ${estadoAnterior} → ${nuevoEstado}`,
+      `[MANUAL] Orden ${ordenIngreso.numero_orden}: ${estadoAnterior} → ${nuevoEstado} (Cambio irreversible)`,
     );
 
     return ordenActualizada;
@@ -511,5 +484,31 @@ export class OrdenesIngresoService {
         presentacion: lote.presentacion,
       })),
     };
+  }
+
+  async findDisponiblesParaLotes(
+    rol: Role,
+    idUnidadUsuario?: number,
+  ): Promise<OrdenIngreso[]> {
+    const queryBuilder = this.ordenIngresoRepository
+      .createQueryBuilder('orden')
+      .leftJoinAndSelect('orden.semillera', 'semillera')
+      .leftJoinAndSelect('orden.cooperador', 'cooperador')
+      .leftJoinAndSelect('orden.semilla', 'semilla')
+      .leftJoinAndSelect('orden.variedad', 'variedad')
+      .leftJoinAndSelect('orden.unidad', 'unidad')
+      .where('orden.estado IN (:...estados)', {
+        estados: ['pendiente', 'en_proceso'],
+      })
+      .orderBy('orden.fecha_creacion', 'DESC');
+
+    // Filtro por unidad si no es admin
+    if (rol !== Role.ADMIN && idUnidadUsuario) {
+      queryBuilder.andWhere('orden.id_unidad = :idUnidad', {
+        idUnidad: idUnidadUsuario,
+      });
+    }
+
+    return await queryBuilder.getMany();
   }
 }
