@@ -53,10 +53,10 @@ export class DetalleOrdenSalida {
   tamano: string;
 
   @Column({ type: 'int' })
-  nro_bolsas: number;
+  cantidad_unidades: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
-  kg_bolsa: number;
+  kg_por_unidad: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   total_kg: number;

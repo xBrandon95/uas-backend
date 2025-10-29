@@ -33,10 +33,8 @@ export class OrdenesSalidaService {
     await queryRunner.startTransaction();
 
     try {
-      // Generar número de orden
       const numeroOrden = await this.generarNumeroOrden();
 
-      // Validar disponibilidad de lotes
       for (const detalle of createOrdenSalidaDto.detalles) {
         const lote = await this.loteProduccionRepository.findOne({
           where: { id_lote_produccion: detalle.id_lote_produccion },
@@ -54,7 +52,6 @@ export class OrdenesSalidaService {
           );
         }
 
-        // ✅ VALIDAR que el lote pertenezca a la semillera seleccionada
         if (
           lote.orden_ingreso.id_semillera !== createOrdenSalidaDto.id_semillera
         ) {
@@ -63,21 +60,21 @@ export class OrdenesSalidaService {
           );
         }
 
-        // ✅ VALIDAR que el lote pertenezca a la semilla seleccionada
         if (lote.variedad.id_semilla !== createOrdenSalidaDto.id_semilla) {
           throw new BadRequestException(
             `El lote ${lote.nro_lote} no pertenece a la semilla seleccionada`,
           );
         }
 
-        if (lote.nro_bolsas < detalle.nro_bolsas) {
+        // ✅ ACTUALIZADO
+        if (lote.cantidad_unidades < detalle.cantidad_unidades) {
           throw new BadRequestException(
-            `Lote ${lote.nro_lote} no tiene suficientes bolsas. Disponible: ${lote.nro_bolsas}, Solicitado: ${detalle.nro_bolsas}`,
+            `Lote ${lote.nro_lote} no tiene suficientes unidades. ` +
+              `Disponible: ${lote.cantidad_unidades}, Solicitado: ${detalle.cantidad_unidades}`,
           );
         }
       }
 
-      // Crear orden de salida
       const ordenSalida = queryRunner.manager.create(OrdenSalida, {
         ...createOrdenSalidaDto,
         numero_orden: numeroOrden,
@@ -88,9 +85,9 @@ export class OrdenesSalidaService {
 
       const ordenGuardada = await queryRunner.manager.save(ordenSalida);
 
-      // Crear detalles y actualizar lotes
       for (const detalleDto of createOrdenSalidaDto.detalles) {
-        const totalKg = detalleDto.nro_bolsas * detalleDto.kg_bolsa;
+        // ✅ ACTUALIZADO
+        const totalKg = detalleDto.cantidad_unidades * detalleDto.kg_por_unidad;
 
         const detalle = queryRunner.manager.create(DetalleOrdenSalida, {
           ...detalleDto,
@@ -100,17 +97,17 @@ export class OrdenesSalidaService {
 
         await queryRunner.manager.save(detalle);
 
-        // Actualizar lote de producción
         const lote = await queryRunner.manager.findOne(LoteProduccion, {
           where: { id_lote_produccion: detalleDto.id_lote_produccion },
         });
 
-        lote!.nro_bolsas -= detalleDto.nro_bolsas;
+        // ✅ ACTUALIZADO
+        lote!.cantidad_unidades -= detalleDto.cantidad_unidades;
         lote!.total_kg -= totalKg;
 
-        if (lote!.nro_bolsas === 0) {
+        if (lote!.cantidad_unidades === 0) {
           lote!.estado = 'vendido';
-        } else if (lote!.nro_bolsas > 0) {
+        } else if (lote!.cantidad_unidades > 0) {
           lote!.estado = 'parcialmente_vendido';
         }
 
@@ -118,8 +115,6 @@ export class OrdenesSalidaService {
       }
 
       await queryRunner.commitTransaction();
-
-      // Retornar orden completa con relaciones
       return await this.findOne(ordenGuardada.id_orden_salida);
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -219,7 +214,7 @@ export class OrdenesSalidaService {
       .where('lote.estado IN (:...estados)', {
         estados: ['disponible', 'parcialmente_vendido'],
       })
-      .andWhere('lote.nro_bolsas > 0')
+      .andWhere('lote.cantidad_unidades > 0')
       .andWhere('orden_ingreso.id_semillera = :idSemillera', { idSemillera })
       .andWhere('variedad.id_semilla = :idSemilla', { idSemilla });
 
@@ -248,7 +243,7 @@ export class OrdenesSalidaService {
       .where('lote.estado IN (:...estados)', {
         estados: ['disponible', 'parcialmente_vendido'],
       })
-      .andWhere('lote.nro_bolsas > 0');
+      .andWhere('lote.cantidad_unidades > 0');
 
     if (rol !== 'admin' && idUnidadUsuario) {
       queryBuilder.andWhere('lote.id_unidad = :idUnidad', {

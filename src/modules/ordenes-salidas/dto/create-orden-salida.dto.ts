@@ -26,17 +26,16 @@ export class CreateDetalleOrdenSalidaDto {
   tamano?: string;
 
   @IsNumber()
-  nro_bolsas: number;
+  cantidad_unidades: number;
 
   @IsNumber()
-  kg_bolsa: number;
+  kg_por_unidad: number;
 }
 
 export class CreateOrdenSalidaDto {
   @IsNumber()
   id_semillera: number;
 
-  // ✅ NUEVO CAMPO
   @IsNumber()
   id_semilla: number;
 

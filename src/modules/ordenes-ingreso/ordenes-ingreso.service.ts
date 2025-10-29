@@ -451,8 +451,8 @@ export class OrdenesIngresoService {
       0,
     );
 
-    const totalBolsasProducidas = lotes.reduce(
-      (sum, lote) => sum + lote.nro_bolsas,
+    const totalUnidadesProducidas = lotes.reduce(
+      (sum, lote) => sum + lote.cantidad_unidades,
       0,
     );
 
@@ -468,7 +468,7 @@ export class OrdenesIngresoService {
       },
       produccion: {
         total_kg_producido: totalKgProducido.toFixed(2),
-        total_bolsas_producidas: totalBolsasProducidas,
+        total_unidades_producidas: totalUnidadesProducidas, // ✅ CAMBIADO
         cantidad_lotes: lotes.length,
         peso_disponible: pesoDisponible.toFixed(2),
         porcentaje_utilizado: porcentajeUtilizado.toFixed(2),
@@ -477,8 +477,8 @@ export class OrdenesIngresoService {
         nro_lote: lote.nro_lote,
         variedad: lote.variedad?.nombre,
         categoria: lote.categoria_salida?.nombre,
-        nro_bolsas: lote.nro_bolsas,
-        kg_por_bolsa: Number(lote.kg_por_bolsa).toFixed(2),
+        cantidad_unidades: lote.cantidad_unidades, // ✅ CAMBIADO
+        kg_por_unidad: Number(lote.kg_por_unidad).toFixed(2), // ✅ CAMBIADO
         total_kg: Number(lote.total_kg).toFixed(2),
         estado: lote.estado,
         presentacion: lote.presentacion,

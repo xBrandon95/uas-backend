@@ -664,8 +664,8 @@ export class ReportesService {
         { text: detalle.nro_lote, style: 'field' },
         { text: detalle.variedad?.nombre || 'N/A', style: 'field' },
         { text: detalle.categoria?.nombre || 'N/A', style: 'field' },
-        { text: detalle.nro_bolsas.toString(), style: 'field' },
-        { text: `${Number(detalle.kg_bolsa).toFixed(2)}`, style: 'field' },
+        { text: detalle.cantidad_unidades.toString(), style: 'field' },
+        { text: `${Number(detalle.kg_por_unidad).toFixed(2)}`, style: 'field' },
         { text: `${Number(detalle.total_kg).toFixed(2)}`, style: 'field' },
       ]),
     ];

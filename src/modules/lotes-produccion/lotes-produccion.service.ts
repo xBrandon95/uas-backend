@@ -24,7 +24,6 @@ export class LotesProduccionService {
     createLoteProduccionDto: CreateLoteProduccionDto,
     idUsuarioCreador: number,
   ): Promise<LoteProduccion> {
-    // 1. Buscar la orden de ingreso
     const ordenIngreso = await this.ordenIngresoRepository.findOne({
       where: { id_orden_ingreso: createLoteProduccionDto.id_orden_ingreso },
     });
@@ -35,15 +34,12 @@ export class LotesProduccionService {
       );
     }
 
-    // 🚫 VALIDACIÓN: No permitir crear lotes si la orden está cancelada
     if (ordenIngreso.estado === 'cancelado') {
       throw new BadRequestException(
-        'No se pueden crear lotes de producción en una orden cancelada. ' +
-          'Primero debe cambiar el estado de la orden.',
+        'No se pueden crear lotes de producción en una orden cancelada.',
       );
     }
 
-    // 2. Calcular total ya producido de esta orden
     const lotesExistentes = await this.loteProduccionRepository.find({
       where: { id_orden_ingreso: createLoteProduccionDto.id_orden_ingreso },
     });
@@ -53,11 +49,10 @@ export class LotesProduccionService {
       0,
     );
 
-    // 3. Calcular el kg del nuevo lote
     const nuevoLoteKg =
-      createLoteProduccionDto.nro_bolsas * createLoteProduccionDto.kg_por_bolsa;
+      createLoteProduccionDto.cantidad_unidades *
+      createLoteProduccionDto.kg_por_unidad;
 
-    // 4. Validar que no exceda el peso neto de la orden de ingreso
     const totalDespuesDeCrear = totalKgProducido + nuevoLoteKg;
 
     if (totalDespuesDeCrear > Number(ordenIngreso.peso_neto)) {
@@ -73,12 +68,11 @@ export class LotesProduccionService {
       );
     }
 
-    // 5. Generar número de lote automático
     const numeroLote = await this.generarNumeroLote();
 
-    // 6. Calcular total_kg
     const totalKg =
-      createLoteProduccionDto.nro_bolsas * createLoteProduccionDto.kg_por_bolsa;
+      createLoteProduccionDto.cantidad_unidades *
+      createLoteProduccionDto.kg_por_unidad;
 
     const loteProduccion = this.loteProduccionRepository.create({
       ...createLoteProduccionDto,
@@ -91,8 +85,6 @@ export class LotesProduccionService {
     const loteGuardado = await this.loteProduccionRepository.save(
       loteProduccion,
     );
-
-    // ✅ 7. ACTUALIZAR ESTADO DE LA ORDEN AUTOMÁTICAMENTE
     await this.actualizarEstadoOrden(ordenIngreso.id_orden_ingreso);
 
     return loteGuardado;
@@ -306,26 +298,24 @@ export class LotesProduccionService {
   ): Promise<LoteProduccion> {
     const lote = await this.findOne(id);
 
-    // Validar que el lote esté en estado editable
     if (lote.estado === 'vendido') {
       throw new BadRequestException('No se puede modificar un lote vendido');
     }
 
-    // Recalcular total_kg si cambió nro_bolsas o kg_por_bolsa
     if (
-      updateLoteProduccionDto.nro_bolsas ||
-      updateLoteProduccionDto.kg_por_bolsa
+      updateLoteProduccionDto.cantidad_unidades ||
+      updateLoteProduccionDto.kg_por_unidad
     ) {
-      const nroBolsas = updateLoteProduccionDto.nro_bolsas || lote.nro_bolsas;
-      const kgPorBolsa =
-        updateLoteProduccionDto.kg_por_bolsa || lote.kg_por_bolsa;
-      updateLoteProduccionDto['total_kg'] = nroBolsas * kgPorBolsa;
+      const cantidadUnidades =
+        updateLoteProduccionDto.cantidad_unidades || lote.cantidad_unidades;
+      const kgPorUnidad =
+        updateLoteProduccionDto.kg_por_unidad || lote.kg_por_unidad;
+      updateLoteProduccionDto['total_kg'] = cantidadUnidades * kgPorUnidad;
     }
 
     Object.assign(lote, updateLoteProduccionDto);
     const loteActualizado = await this.loteProduccionRepository.save(lote);
 
-    // ✅ Recalcular estado de la orden
     await this.actualizarEstadoOrden(lote.id_orden_ingreso);
 
     return loteActualizado;
@@ -396,19 +386,17 @@ export class LotesProduccionService {
       .select('variedad.nombre', 'variedad')
       .addSelect('semilla.nombre', 'semilla')
       .addSelect('categoria.nombre', 'categoria')
-      .addSelect('SUM(lote.nro_bolsas)', 'total_bolsas')
+      .addSelect('SUM(lote.cantidad_unidades)', 'total_unidades')
       .addSelect('SUM(lote.total_kg)', 'total_kg')
       .where('lote.estado IN (:...estados)', {
         estados: ['disponible', 'parcialmente_vendido'],
       });
 
-    // Si es ENCARGADO u OPERADOR, solo ve su unidad
     if (rol !== 'admin') {
       queryBuilder.andWhere('lote.id_unidad = :idUnidad', {
         idUnidad: idUnidadUsuario,
       });
     } else if (idUnidadFiltro) {
-      // Si es ADMIN y filtra por unidad específica
       queryBuilder.andWhere('lote.id_unidad = :idUnidad', {
         idUnidad: idUnidadFiltro,
       });
@@ -428,14 +416,12 @@ export class LotesProduccionService {
       .select('lote.estado', 'estado')
       .addSelect('COUNT(lote.id_lote_produccion)', 'cantidad')
       .addSelect('SUM(lote.total_kg)', 'peso_total')
-      .addSelect('SUM(lote.nro_bolsas)', 'total_bolsas');
+      .addSelect('SUM(lote.cantidad_unidades)', 'total_unidades');
 
     if (idUnidad) {
       queryBuilder.where('lote.id_unidad = :idUnidad', { idUnidad });
     }
 
-    const estadisticas = await queryBuilder.groupBy('lote.estado').getRawMany();
-
-    return estadisticas;
+    return await queryBuilder.groupBy('lote.estado').getRawMany();
   }
 }
