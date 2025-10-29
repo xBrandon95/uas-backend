@@ -10,6 +10,7 @@ import { CreateLoteProduccionDto } from './dto/create-lote-produccion.dto';
 import { UpdateLoteProduccionDto } from './dto/update-lote-produccion.dto';
 import { OrdenIngreso } from '../ordenes-ingreso/entities/orden-ingreso.entity';
 import { Role } from 'src/common/enums/roles.enum';
+import { MovimientoLote } from '../movimientos-lote/entities/movimiento-lote.entity';
 
 @Injectable()
 export class LotesProduccionService {
@@ -18,6 +19,8 @@ export class LotesProduccionService {
     private readonly loteProduccionRepository: Repository<LoteProduccion>,
     @InjectRepository(OrdenIngreso)
     private readonly ordenIngresoRepository: Repository<OrdenIngreso>,
+    @InjectRepository(MovimientoLote)
+    private readonly movimientoRepository: Repository<MovimientoLote>,
   ) {}
 
   async create(
@@ -78,6 +81,8 @@ export class LotesProduccionService {
       ...createLoteProduccionDto,
       nro_lote: numeroLote,
       total_kg: totalKg,
+      cantidad_original: createLoteProduccionDto.cantidad_unidades,
+      total_kg_original: totalKg,
       id_usuario_creador: idUsuarioCreador,
       estado: createLoteProduccionDto.estado || 'disponible',
     });
@@ -85,12 +90,25 @@ export class LotesProduccionService {
     const loteGuardado = await this.loteProduccionRepository.save(
       loteProduccion,
     );
+
+    const movimientoEntrada = this.movimientoRepository.create({
+      id_lote_produccion: loteGuardado.id_lote_produccion,
+      tipo_movimiento: 'entrada',
+      cantidad_unidades: createLoteProduccionDto.cantidad_unidades,
+      kg_movidos: totalKg,
+      saldo_unidades: createLoteProduccionDto.cantidad_unidades,
+      saldo_kg: totalKg,
+      id_usuario: idUsuarioCreador,
+      observaciones: `Entrada inicial - Lote ${numeroLote}`,
+    });
+
+    await this.movimientoRepository.save(movimientoEntrada);
+
     await this.actualizarEstadoOrden(ordenIngreso.id_orden_ingreso);
 
     return loteGuardado;
   }
 
-  // ✅ MÉTODO CENTRALIZADO PARA ACTUALIZAR ESTADO DE ORDEN
   private async actualizarEstadoOrden(idOrden: number): Promise<void> {
     const ordenIngreso = await this.ordenIngresoRepository.findOne({
       where: { id_orden_ingreso: idOrden },

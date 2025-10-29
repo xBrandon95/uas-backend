@@ -24,12 +24,12 @@ export class CreateLoteProduccionDto {
   @IsInt()
   @IsNotEmpty()
   @Min(1)
-  cantidad_unidades: number;
+  cantidad_unidades: number; // ✅ CAMBIADO
 
   @IsNumber()
   @IsNotEmpty()
   @Min(0.01)
-  kg_por_unidad: number;
+  kg_por_unidad: number; // ✅ CAMBIADO
 
   @IsString()
   @IsOptional()

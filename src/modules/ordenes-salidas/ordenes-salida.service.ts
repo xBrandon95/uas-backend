@@ -10,6 +10,7 @@ import { DetalleOrdenSalida } from './entities/detalle-orden-salida.entity';
 import { CreateOrdenSalidaDto } from './dto/create-orden-salida.dto';
 import { UpdateOrdenSalidaDto } from './dto/update-orden-salida.dto';
 import { LoteProduccion } from '../lotes-produccion/entities/lote-produccion.entity';
+import { MovimientoLote } from '../movimientos-lote/entities/movimiento-lote.entity'; // ✅ AGREGAR
 import { PaginationDto } from '../cooperadores/dto/pagination.dto';
 
 @Injectable()
@@ -21,6 +22,8 @@ export class OrdenesSalidaService {
     private readonly detalleRepository: Repository<DetalleOrdenSalida>,
     @InjectRepository(LoteProduccion)
     private readonly loteProduccionRepository: Repository<LoteProduccion>,
+    @InjectRepository(MovimientoLote)
+    private readonly movimientoLoteRepository: Repository<MovimientoLote>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -35,6 +38,7 @@ export class OrdenesSalidaService {
     try {
       const numeroOrden = await this.generarNumeroOrden();
 
+      // Validaciones previas (código existente)
       for (const detalle of createOrdenSalidaDto.detalles) {
         const lote = await this.loteProduccionRepository.findOne({
           where: { id_lote_produccion: detalle.id_lote_produccion },
@@ -66,7 +70,6 @@ export class OrdenesSalidaService {
           );
         }
 
-        // ✅ ACTUALIZADO
         if (lote.cantidad_unidades < detalle.cantidad_unidades) {
           throw new BadRequestException(
             `Lote ${lote.nro_lote} no tiene suficientes unidades. ` +
@@ -75,6 +78,7 @@ export class OrdenesSalidaService {
         }
       }
 
+      // Crear orden de salida
       const ordenSalida = queryRunner.manager.create(OrdenSalida, {
         ...createOrdenSalidaDto,
         numero_orden: numeroOrden,
@@ -85,10 +89,11 @@ export class OrdenesSalidaService {
 
       const ordenGuardada = await queryRunner.manager.save(ordenSalida);
 
+      // Procesar cada detalle
       for (const detalleDto of createOrdenSalidaDto.detalles) {
-        // ✅ ACTUALIZADO
         const totalKg = detalleDto.cantidad_unidades * detalleDto.kg_por_unidad;
 
+        // 1. Crear detalle de orden de salida
         const detalle = queryRunner.manager.create(DetalleOrdenSalida, {
           ...detalleDto,
           id_orden_salida: ordenGuardada.id_orden_salida,
@@ -97,11 +102,31 @@ export class OrdenesSalidaService {
 
         await queryRunner.manager.save(detalle);
 
+        // 2. Obtener el lote
         const lote = await queryRunner.manager.findOne(LoteProduccion, {
           where: { id_lote_produccion: detalleDto.id_lote_produccion },
         });
 
-        // ✅ ACTUALIZADO
+        // ✅ 3. REGISTRAR MOVIMIENTO DE SALIDA (NUEVO CÓDIGO AQUÍ)
+        const movimiento = queryRunner.manager.create(MovimientoLote, {
+          id_lote_produccion: lote!.id_lote_produccion,
+          tipo_movimiento: 'salida',
+          cantidad_unidades: detalleDto.cantidad_unidades,
+          kg_movidos: totalKg,
+          // Saldos DESPUÉS del movimiento
+          saldo_unidades:
+            lote!.cantidad_unidades - detalleDto.cantidad_unidades,
+          saldo_kg: lote!.total_kg - totalKg,
+          // Relaciones
+          id_orden_salida: ordenGuardada.id_orden_salida,
+          id_usuario: idUsuarioCreador,
+          observaciones: `Venta - Orden ${numeroOrden}`,
+        });
+
+        await queryRunner.manager.save(movimiento);
+        // ✅ FIN DEL CÓDIGO NUEVO
+
+        // 4. Actualizar el lote (código existente)
         lote!.cantidad_unidades -= detalleDto.cantidad_unidades;
         lote!.total_kg -= totalKg;
 
@@ -124,7 +149,16 @@ export class OrdenesSalidaService {
     }
   }
 
-  // Modificar findAll para aceptar filtros por rol
+  // ✅ NUEVO MÉTODO: Consultar movimientos de una orden
+  async getMovimientosOrden(idOrden: number): Promise<MovimientoLote[]> {
+    return await this.movimientoLoteRepository.find({
+      where: { id_orden_salida: idOrden },
+      relations: ['lote_produccion', 'usuario'],
+      order: { fecha_movimiento: 'DESC' },
+    });
+  }
+
+  // Resto de métodos existentes sin cambios...
   async findAll(
     rol: string,
     idUnidadUsuario?: number,
@@ -157,14 +191,12 @@ export class OrdenesSalidaService {
       .leftJoinAndSelect('detalles.categoria', 'categoria')
       .leftJoinAndSelect('detalles.lote_produccion', 'lote_produccion');
 
-    // 🔒 Filtro por unidad si no es admin
     if (rol !== 'admin' && idUnidadUsuario) {
       queryBuilder.where('orden.id_unidad = :idUnidad', {
         idUnidad: idUnidadUsuario,
       });
     }
 
-    // 🔍 Filtro por búsqueda opcional
     if (search.trim()) {
       const searchTerm = `%${search.trim()}%`;
       queryBuilder.andWhere(
@@ -173,17 +205,12 @@ export class OrdenesSalidaService {
       );
     }
 
-    // 🔽 Orden descendente por fecha
     queryBuilder.orderBy('orden.fecha_creacion', 'DESC');
-
-    // ⏩ Paginación
     queryBuilder.skip(skip).take(limit);
 
-    // 📦 Obtener datos y total
     const [data, total] = await queryBuilder.getManyAndCount();
     const totalPages = Math.ceil(total / limit);
 
-    // 📊 Retornar estructura uniforme
     return {
       data,
       meta: {
@@ -229,7 +256,6 @@ export class OrdenesSalidaService {
     return await queryBuilder.getMany();
   }
 
-  // Agregar método para obtener lotes disponibles por unidad
   async getLotesDisponiblesPorUnidad(
     rol: string,
     idUnidadUsuario?: number,

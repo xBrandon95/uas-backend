@@ -77,6 +77,17 @@ export class LoteProduccion {
   @JoinColumn({ name: 'id_usuario_creador' })
   usuario_creador: Usuario;
 
+  @Column({ type: 'int', comment: 'Cantidad original al crear el lote' })
+  cantidad_original: number;
+
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    comment: 'Total kg original',
+  })
+  total_kg_original: number;
+
   @CreateDateColumn()
   fecha_creacion: Date;
 
