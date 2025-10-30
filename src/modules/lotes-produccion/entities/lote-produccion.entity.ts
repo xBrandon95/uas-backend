@@ -51,7 +51,7 @@ export class LoteProduccion {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   total_kg: number;
 
-  @Column({ length: 100, nullable: true })
+  @Column({ length: 100 })
   presentacion: string;
 
   @Column({ length: 100, nullable: true })
