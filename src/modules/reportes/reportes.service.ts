@@ -214,27 +214,27 @@ export class ReportesService {
                   [
                     {
                       text: 'Día',
-                      style: 'field',
+                      style: 'small',
                       bold: true,
                       alignment: 'center',
                     },
                     {
                       text: 'Mes',
-                      style: 'field',
+                      style: 'small',
                       bold: true,
                       alignment: 'center',
                     },
                     {
                       text: 'Año',
-                      style: 'field',
+                      style: 'small',
                       bold: true,
                       alignment: 'center',
                     },
                   ],
                   [
-                    { text: `${day}`, style: 'field', alignment: 'center' },
-                    { text: `${month}`, style: 'field', alignment: 'center' },
-                    { text: `${year}`, style: 'field', alignment: 'center' },
+                    { text: `${day}`, style: 'small', alignment: 'center' },
+                    { text: `${month}`, style: 'small', alignment: 'center' },
+                    { text: `${year}`, style: 'small', alignment: 'center' },
                   ],
                 ],
               },
@@ -651,33 +651,46 @@ export class ReportesService {
   }
 
   private buildOrdenSalidaDocument(orden: OrdenSalida): TDocumentDefinitions {
-    const detallesTableBody = [
-      [
-        { text: 'Lote', style: 'subHeader' },
-        { text: 'Variedad', style: 'subHeader' },
-        { text: 'Categoría', style: 'subHeader' },
-        { text: 'Bolsas', style: 'subHeader' },
-        { text: 'Kg/Bolsa', style: 'subHeader' },
-        { text: 'Total Kg', style: 'subHeader' },
-      ],
-      ...orden.detalles.map((detalle) => [
-        { text: detalle.nro_lote, style: 'field' },
-        { text: detalle.variedad?.nombre || 'N/A', style: 'field' },
-        { text: detalle.categoria?.nombre || 'N/A', style: 'field' },
-        { text: detalle.cantidad_unidades.toString(), style: 'field' },
-        { text: `${Number(detalle.kg_por_unidad).toFixed(2)}`, style: 'field' },
-        { text: `${Number(detalle.total_kg).toFixed(2)}`, style: 'field' },
-      ]),
+    const totalRow = [
+      {
+        text: 'TOTAL',
+        style: 'small',
+        bold: true,
+        alignment: 'right',
+        colSpan: 5, // ocupa las primeras 5 columnas
+        border: [false, true, false, false], // si no quieres borde inferior
+      },
+      {},
+      {},
+      {},
+      {}, // ← estos son obligatorios para las columnas que ocupa
+      {
+        text: 'Texto del total',
+        style: 'small',
+        bold: true,
+        alignment: 'right',
+        border: [false, true, false, false], // igual sin borde inferior si deseas
+      },
     ];
 
-    // const totalBolsas = orden.detalles.reduce(
-    //   (sum, d) => sum + d.nro_bolsas,
-    //   0,
-    // );
-    // const totalKg = orden.detalles.reduce(
-    //   (sum, d) => sum + Number(d.total_kg),
-    //   0,
-    // );
+    const detallesTableBody = [
+      [
+        { text: 'Lote', style: 'title' },
+        { text: 'Variedad', style: 'title' },
+        { text: 'Categoría', style: 'title' },
+        { text: 'Unidades', style: 'title' },
+        { text: 'Kg/u', style: 'title' },
+        { text: 'Total Kg', style: 'title' },
+      ],
+      ...orden.detalles.map((detalle) => [
+        { text: detalle.nro_lote, style: 'small' },
+        { text: detalle.variedad?.nombre || 'N/A', style: 'small' },
+        { text: detalle.categoria?.nombre || 'N/A', style: 'small' },
+        { text: detalle.cantidad_unidades.toString(), style: 'small' },
+        { text: `${Number(detalle.kg_por_unidad).toFixed(2)}`, style: 'small' },
+        { text: `${Number(detalle.total_kg).toFixed(2)}`, style: 'small' },
+      ]),
+    ];
 
     const date = new Date(orden.fecha_creacion);
     const day = date.getDate();
@@ -714,6 +727,12 @@ export class ReportesService {
       },
       small: {
         fontSize: 8,
+      },
+      title: {
+        fontSize: 9,
+        bold: true,
+        alignment: 'center',
+        margin: [0, 1, 0, 1],
       },
     };
     const numeroOrden = orden.numero_orden;
@@ -758,27 +777,27 @@ export class ReportesService {
                   [
                     {
                       text: 'Día',
-                      style: 'field',
+                      style: 'small',
                       bold: true,
                       alignment: 'center',
                     },
                     {
                       text: 'Mes',
-                      style: 'field',
+                      style: 'small',
                       bold: true,
                       alignment: 'center',
                     },
                     {
                       text: 'Año',
-                      style: 'field',
+                      style: 'small',
                       bold: true,
                       alignment: 'center',
                     },
                   ],
                   [
-                    { text: `${day}`, style: 'field', alignment: 'center' },
-                    { text: `${month}`, style: 'field', alignment: 'center' },
-                    { text: `${year}`, style: 'field', alignment: 'center' },
+                    { text: `${day}`, style: 'small', alignment: 'center' },
+                    { text: `${month}`, style: 'small', alignment: 'center' },
+                    { text: `${year}`, style: 'small', alignment: 'center' },
                   ],
                 ],
               },
@@ -883,16 +902,30 @@ export class ReportesService {
             body: detallesTableBody,
           },
         },
-
+        {
+          table: {
+            widths: ['*'],
+            body: [
+              [
+                {
+                  text: 'TOTAL: ',
+                  bold: true,
+                  alignment: 'left',
+                  fontSize: 8.5,
+                  margin: [0, 0, 0, 0],
+                },
+              ],
+            ],
+          },
+          layout: {
+            hLineWidth: function (i, node) {
+              return i === 1 ? 1 : 0;
+            },
+          },
+        },
         {
           text: '\n',
         },
-        // {
-        //   text: `\nTotales: ${totalBolsas} bolsas | ${totalKg.toFixed(2)} kg`,
-        //   style: 'value',
-        //   alignment: 'right',
-        // },
-
         {
           table: {
             widths: ['*'],
