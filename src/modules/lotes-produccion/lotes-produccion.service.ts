@@ -47,8 +47,9 @@ export class LotesProduccionService {
       where: { id_orden_ingreso: createLoteProduccionDto.id_orden_ingreso },
     });
 
+    // ✅ CORRECCIÓN: Usar total_kg_original en lugar de total_kg
     const totalKgProducido = lotesExistentes.reduce(
-      (sum, lote) => sum + Number(lote.total_kg),
+      (sum, lote) => sum + Number(lote.total_kg_original),
       0,
     );
 
@@ -128,7 +129,7 @@ export class LotesProduccionService {
     });
 
     const totalKgProducido = lotes.reduce(
-      (sum, lote) => sum + Number(lote.total_kg),
+      (sum, lote) => sum + Number(lote.total_kg_original),
       0,
     );
 

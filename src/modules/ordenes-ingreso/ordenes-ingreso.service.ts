@@ -345,7 +345,7 @@ export class OrdenesIngresoService {
       }
 
       const totalKgProducido = lotes.reduce(
-        (sum, l) => sum + Number(l.total_kg),
+        (sum, l) => sum + Number(l.total_kg_original),
         0,
       );
 
@@ -447,12 +447,11 @@ export class OrdenesIngresoService {
     });
 
     const totalKgProducido = lotes.reduce(
-      (sum, lote) => sum + Number(lote.total_kg),
+      (sum, lote) => sum + Number(lote.total_kg_original),
       0,
     );
-
     const totalUnidadesProducidas = lotes.reduce(
-      (sum, lote) => sum + lote.cantidad_unidades,
+      (sum, lote) => sum + lote.cantidad_original,
       0,
     );
 
