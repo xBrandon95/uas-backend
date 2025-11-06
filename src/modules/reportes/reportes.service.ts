@@ -96,6 +96,7 @@ export class ReportesService {
       where: { id_orden_salida: id },
       relations: [
         'semillera',
+        'semilla',
         'cliente',
         'conductor',
         'vehiculo',
@@ -374,46 +375,46 @@ export class ReportesService {
               ],
 
               // ─── Fila 3 ───
-              [
-                {
-                  text: [{ text: 'INGRESO: ', bold: true }, { text: 'N/A' }],
-                  style: 'field',
-                  colSpan: 3,
-                },
-                {},
-                {},
-                {
-                  text: [
-                    { text: 'HORA INGRESO: ', bold: true },
-                    { text: 'N/A' },
-                  ],
-                  style: 'field',
-                  colSpan: 3,
-                },
-                {},
-                {},
-              ],
+              // [
+              //   {
+              //     text: [{ text: 'INGRESO: ', bold: true }, { text: 'N/A' }],
+              //     style: 'field',
+              //     colSpan: 3,
+              //   },
+              //   {},
+              //   {},
+              //   {
+              //     text: [
+              //       { text: 'HORA INGRESO: ', bold: true },
+              //       { text: 'N/A' },
+              //     ],
+              //     style: 'field',
+              //     colSpan: 3,
+              //   },
+              //   {},
+              //   {},
+              // ],
 
-              // ─── Fila 4 ───
-              [
-                {
-                  text: [{ text: 'SALIDA: ', bold: true }, { text: 'N/A' }],
-                  style: 'field',
-                  colSpan: 3,
-                },
-                {},
-                {},
-                {
-                  text: [
-                    { text: 'HORA SALIDA: ', bold: true },
-                    { text: 'N/A' },
-                  ],
-                  style: 'field',
-                  colSpan: 3,
-                },
-                {},
-                {},
-              ],
+              // // ─── Fila 4 ───
+              // [
+              //   {
+              //     text: [{ text: 'SALIDA: ', bold: true }, { text: 'N/A' }],
+              //     style: 'field',
+              //     colSpan: 3,
+              //   },
+              //   {},
+              //   {},
+              //   {
+              //     text: [
+              //       { text: 'HORA SALIDA: ', bold: true },
+              //       { text: 'N/A' },
+              //     ],
+              //     style: 'field',
+              //     colSpan: 3,
+              //   },
+              //   {},
+              //   {},
+              // ],
             ],
           },
           margin: [0, 5, 0, 5],
@@ -651,28 +652,6 @@ export class ReportesService {
   }
 
   private buildOrdenSalidaDocument(orden: OrdenSalida): TDocumentDefinitions {
-    const totalRow = [
-      {
-        text: 'TOTAL',
-        style: 'small',
-        bold: true,
-        alignment: 'right',
-        colSpan: 5, // ocupa las primeras 5 columnas
-        border: [false, true, false, false], // si no quieres borde inferior
-      },
-      {},
-      {},
-      {},
-      {}, // ← estos son obligatorios para las columnas que ocupa
-      {
-        text: 'Texto del total',
-        style: 'small',
-        bold: true,
-        alignment: 'right',
-        border: [false, true, false, false], // igual sin borde inferior si deseas
-      },
-    ];
-
     const detallesTableBody = [
       [
         { text: 'Lote', style: 'title' },
@@ -902,27 +881,7 @@ export class ReportesService {
             body: detallesTableBody,
           },
         },
-        {
-          table: {
-            widths: ['*'],
-            body: [
-              [
-                {
-                  text: 'TOTAL: ',
-                  bold: true,
-                  alignment: 'left',
-                  fontSize: 8.5,
-                  margin: [0, 0, 0, 0],
-                },
-              ],
-            ],
-          },
-          layout: {
-            hLineWidth: function (i, node) {
-              return i === 1 ? 1 : 0;
-            },
-          },
-        },
+
         {
           text: '\n',
         },
@@ -943,7 +902,13 @@ export class ReportesService {
           },
           margin: [0, 0, 0, 10] as Margins,
         },
-
+        {
+          text: 'Total costo servicio: ',
+          bold: true,
+          alignment: 'right',
+          style: 'field',
+          margin: [0, 15, 60, 15],
+        },
         // Firmas
         {
           text: `AUTORIZADO POR: `,
