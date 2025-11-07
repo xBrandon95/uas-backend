@@ -102,6 +102,8 @@ export class LotesProduccionController {
     @Query('idSemilla') idSemilla?: number,
     @Query('idVariedad') idVariedad?: number,
     @Query('idCategoria') idCategoria?: number,
+    @Query('fechaInicio') fechaInicio?: string,
+    @Query('fechaFin') fechaFin?: string,
   ): Promise<any[]> {
     return this.lotesProduccionService.getInventarioPorVariedad(
       user.rol,
@@ -110,6 +112,8 @@ export class LotesProduccionController {
       idSemilla,
       idVariedad,
       idCategoria,
+      fechaInicio,
+      fechaFin,
     );
   }
 

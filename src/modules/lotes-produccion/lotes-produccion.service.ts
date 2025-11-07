@@ -396,9 +396,11 @@ export class LotesProduccionService {
     rol: string,
     idUnidadUsuario?: number,
     idUnidadFiltro?: number,
-    idSemilla?: number, // ✅ NUEVO
-    idVariedad?: number, // ✅ NUEVO
-    idCategoria?: number, // ✅ NUEVO
+    idSemilla?: number,
+    idVariedad?: number,
+    idCategoria?: number,
+    fechaInicio?: string,
+    fechaFin?: string,
   ): Promise<any[]> {
     const queryBuilder = this.loteProduccionRepository
       .createQueryBuilder('lote')
@@ -425,7 +427,7 @@ export class LotesProduccionService {
       });
     }
 
-    // ✅ NUEVOS FILTROS OPCIONALES
+    // Filtros opcionales existentes
     if (idSemilla) {
       queryBuilder.andWhere('semilla.id_semilla = :idSemilla', { idSemilla });
     }
@@ -439,6 +441,24 @@ export class LotesProduccionService {
     if (idCategoria) {
       queryBuilder.andWhere('categoria.id_categoria = :idCategoria', {
         idCategoria,
+      });
+    }
+
+    if (fechaInicio && fechaFin) {
+      queryBuilder.andWhere(
+        'DATE(lote.fecha_creacion) BETWEEN :fechaInicio AND :fechaFin',
+        {
+          fechaInicio,
+          fechaFin,
+        },
+      );
+    } else if (fechaInicio) {
+      queryBuilder.andWhere('DATE(lote.fecha_creacion) >= :fechaInicio', {
+        fechaInicio,
+      });
+    } else if (fechaFin) {
+      queryBuilder.andWhere('DATE(lote.fecha_creacion) <= :fechaFin', {
+        fechaFin,
       });
     }
 
