@@ -99,11 +99,17 @@ export class LotesProduccionController {
   getInventarioPorVariedad(
     @CurrentUser() user: AuthenticatedUser,
     @Query('idUnidad') idUnidad?: number,
+    @Query('idSemilla') idSemilla?: number,
+    @Query('idVariedad') idVariedad?: number,
+    @Query('idCategoria') idCategoria?: number,
   ): Promise<any[]> {
     return this.lotesProduccionService.getInventarioPorVariedad(
       user.rol,
       user.id_unidad,
       idUnidad,
+      idSemilla,
+      idVariedad,
+      idCategoria,
     );
   }
 

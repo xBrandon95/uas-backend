@@ -396,6 +396,9 @@ export class LotesProduccionService {
     rol: string,
     idUnidadUsuario?: number,
     idUnidadFiltro?: number,
+    idSemilla?: number, // ✅ NUEVO
+    idVariedad?: number, // ✅ NUEVO
+    idCategoria?: number, // ✅ NUEVO
   ): Promise<any[]> {
     const queryBuilder = this.loteProduccionRepository
       .createQueryBuilder('lote')
@@ -411,6 +414,7 @@ export class LotesProduccionService {
         estados: ['disponible', 'parcialmente_vendido'],
       });
 
+    // Filtro por rol y unidad
     if (rol !== 'admin') {
       queryBuilder.andWhere('lote.id_unidad = :idUnidad', {
         idUnidad: idUnidadUsuario,
@@ -418,6 +422,23 @@ export class LotesProduccionService {
     } else if (idUnidadFiltro) {
       queryBuilder.andWhere('lote.id_unidad = :idUnidad', {
         idUnidad: idUnidadFiltro,
+      });
+    }
+
+    // ✅ NUEVOS FILTROS OPCIONALES
+    if (idSemilla) {
+      queryBuilder.andWhere('semilla.id_semilla = :idSemilla', { idSemilla });
+    }
+
+    if (idVariedad) {
+      queryBuilder.andWhere('variedad.id_variedad = :idVariedad', {
+        idVariedad,
+      });
+    }
+
+    if (idCategoria) {
+      queryBuilder.andWhere('categoria.id_categoria = :idCategoria', {
+        idCategoria,
       });
     }
 
