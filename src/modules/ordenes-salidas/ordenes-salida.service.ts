@@ -426,21 +426,9 @@ export class OrdenesSalidaService {
   }
 
   private async generarNumeroOrden(): Promise<string> {
-    const fecha = new Date();
-    const year = fecha.getFullYear();
-    const month = String(fecha.getMonth() + 1).padStart(2, '0');
-
-    const count = await this.ordenSalidaRepository.count({
-      where: {
-        numero_orden: Between(
-          `OS-${year}${month}-0000`,
-          `OS-${year}${month}-9999`,
-        ),
-      },
-    });
-
-    const secuencial = String(count + 1).padStart(4, '0');
-    return `OS-${year}${month}-${secuencial}`;
+    const count = await this.ordenSalidaRepository.count();
+    const secuencial = String(count + 1).padStart(5, '0');
+    return secuencial;
   }
 
   async getEstadisticas(idUnidad?: number): Promise<any> {

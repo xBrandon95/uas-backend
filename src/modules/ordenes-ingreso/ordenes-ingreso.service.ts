@@ -389,22 +389,9 @@ export class OrdenesIngresoService {
   }
 
   private async generarNumeroOrden(): Promise<string> {
-    const fecha = new Date();
-    const year = fecha.getFullYear();
-    const month = String(fecha.getMonth() + 1).padStart(2, '0');
-
-    // Contar órdenes del mes actual
-    const count = await this.ordenIngresoRepository.count({
-      where: {
-        numero_orden: Between(
-          `OI-${year}${month}-0000`,
-          `OI-${year}${month}-9999`,
-        ),
-      },
-    });
-
-    const secuencial = String(count + 1).padStart(4, '0');
-    return `OI-${year}${month}-${secuencial}`;
+    const count = await this.ordenIngresoRepository.count();
+    const secuencial = String(count + 1).padStart(5, '0');
+    return secuencial;
   }
 
   async getEstadisticas(

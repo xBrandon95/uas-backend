@@ -10,6 +10,13 @@ export class PdfUtils {
   }
 
   static getOrderNumber(numeroOrden: string): string {
+    // Si el formato es el nuevo (solo números), retornar directamente
+    if (/^\d{5}$/.test(numeroOrden)) {
+      return numeroOrden;
+    }
+
+    // Si es el formato antiguo (OI-YYYYMM-XXXX), extraer el último segmento
+    // Esto mantiene compatibilidad con órdenes antiguas
     const partes = numeroOrden.split('-');
     return partes[partes.length - 1];
   }
