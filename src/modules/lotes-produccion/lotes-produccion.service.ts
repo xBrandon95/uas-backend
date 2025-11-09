@@ -321,6 +321,11 @@ export class LotesProduccionService {
       throw new BadRequestException('No se puede modificar un lote vendido');
     }
 
+    // ✅ NUEVO: Guardar valores originales antes de actualizar
+    const idOrdenIngresoOriginal = lote.id_orden_ingreso;
+    const totalKgOriginalAnterior = Number(lote.total_kg_original);
+
+    // Calcular nuevo total_kg si cambian cantidad o kg_por_unidad
     if (
       updateLoteProduccionDto.cantidad_unidades ||
       updateLoteProduccionDto.kg_por_unidad
@@ -329,13 +334,31 @@ export class LotesProduccionService {
         updateLoteProduccionDto.cantidad_unidades || lote.cantidad_unidades;
       const kgPorUnidad =
         updateLoteProduccionDto.kg_por_unidad || lote.kg_por_unidad;
-      updateLoteProduccionDto['total_kg'] = cantidadUnidades * kgPorUnidad;
+
+      const nuevoTotalKg = cantidadUnidades * kgPorUnidad;
+
+      updateLoteProduccionDto['total_kg'] = nuevoTotalKg;
+
+      // ✅ CRÍTICO: Si el lote está "disponible", actualizar también los valores originales
+      if (lote.estado === 'disponible') {
+        updateLoteProduccionDto['cantidad_original'] = cantidadUnidades;
+        updateLoteProduccionDto['total_kg_original'] = nuevoTotalKg;
+      }
     }
 
     Object.assign(lote, updateLoteProduccionDto);
     const loteActualizado = await this.loteProduccionRepository.save(lote);
 
-    await this.actualizarEstadoOrden(lote.id_orden_ingreso);
+    // ✅ IMPORTANTE: Solo recalcular si cambió el peso original (cuando está disponible)
+    // o si cambió de orden (aunque esto último no debería pasar)
+    const cambioEnPesoOriginal =
+      lote.estado === 'disponible' &&
+      (updateLoteProduccionDto.cantidad_unidades ||
+        updateLoteProduccionDto.kg_por_unidad);
+
+    if (cambioEnPesoOriginal) {
+      await this.actualizarEstadoOrden(idOrdenIngresoOriginal);
+    }
 
     return loteActualizado;
   }
