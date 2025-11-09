@@ -28,7 +28,7 @@ export class CategoriasController {
   constructor(private readonly categoriasService: CategoriasService) {}
 
   @Post()
-  @Roles(Role.ADMIN, Role.ENCARGADO)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   create(@Body() createCategoriaDto: CreateCategoriaDto): Promise<Categoria> {
     return this.categoriasService.create(createCategoriaDto);
   }
@@ -52,7 +52,7 @@ export class CategoriasController {
   }
 
   @Patch(':id')
-  @Roles(Role.ADMIN, Role.ENCARGADO)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCategoriaDto: UpdateCategoriaDto,
@@ -61,7 +61,7 @@ export class CategoriasController {
   }
 
   @Delete(':id')
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.categoriasService.remove(id);

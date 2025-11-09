@@ -28,7 +28,7 @@ export class SemillerasController {
   constructor(private readonly semillerasService: SemillerasService) {}
 
   @Post()
-  @Roles(Role.ADMIN, Role.ENCARGADO)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   create(@Body() createSemillaDto: CreateSemilleraDto): Promise<Semillera> {
     return this.semillerasService.create(createSemillaDto);
   }
@@ -52,7 +52,7 @@ export class SemillerasController {
   }
 
   @Patch(':id')
-  @Roles(Role.ADMIN, Role.ENCARGADO)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateSemillaDto: UpdateSemilleraDto,
@@ -61,13 +61,13 @@ export class SemillerasController {
   }
 
   @Patch(':id/toggle-active')
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   toggleActive(@Param('id', ParseIntPipe) id: number): Promise<Semillera> {
     return this.semillerasService.toggleActive(id);
   }
 
   @Delete(':id')
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.semillerasService.remove(id);

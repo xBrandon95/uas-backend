@@ -28,7 +28,7 @@ export class VehiculosController {
   constructor(private readonly vehiculosService: VehiculosService) {}
 
   @Post()
-  @Roles(Role.ADMIN, Role.ENCARGADO)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   create(@Body() createVehiculoDto: CreateVehiculoDto): Promise<Vehiculo> {
     return this.vehiculosService.create(createVehiculoDto);
   }
@@ -52,7 +52,7 @@ export class VehiculosController {
   }
 
   @Patch(':id')
-  @Roles(Role.ADMIN, Role.ENCARGADO)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateVehiculoDto: UpdateVehiculoDto,
@@ -61,7 +61,7 @@ export class VehiculosController {
   }
 
   @Delete(':id')
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.vehiculosService.remove(id);

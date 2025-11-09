@@ -161,7 +161,7 @@ export class OrdenesIngresoController {
   }
 
   @Patch(':id/estado')
-  @Roles(Role.ADMIN, Role.ENCARGADO)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   cambiarEstado(
     @Param('id', ParseIntPipe) id: number,
     @Body('estado') estado: string,
@@ -176,7 +176,7 @@ export class OrdenesIngresoController {
   }
 
   @Delete(':id')
-  @Roles(Role.ADMIN, Role.ENCARGADO)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(
     @Param('id', ParseIntPipe) id: number,

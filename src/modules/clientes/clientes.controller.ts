@@ -28,7 +28,7 @@ export class ClientesController {
   constructor(private readonly clientesService: ClientesService) {}
 
   @Post()
-  @Roles(Role.ADMIN, Role.ENCARGADO)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   create(@Body() createClienteDto: CreateClienteDto): Promise<Cliente> {
     return this.clientesService.create(createClienteDto);
   }
@@ -52,7 +52,7 @@ export class ClientesController {
   }
 
   @Patch(':id')
-  @Roles(Role.ADMIN, Role.ENCARGADO)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateClienteDto: UpdateClienteDto,
@@ -61,7 +61,7 @@ export class ClientesController {
   }
 
   @Delete(':id')
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.clientesService.remove(id);

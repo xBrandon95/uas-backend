@@ -28,7 +28,7 @@ export class ConductoresController {
   constructor(private readonly conductoresService: ConductoresService) {}
 
   @Post()
-  @Roles(Role.ADMIN, Role.ENCARGADO)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   create(@Body() createConductorDto: CreateConductorDto): Promise<Conductor> {
     return this.conductoresService.create(createConductorDto);
   }
@@ -52,7 +52,7 @@ export class ConductoresController {
   }
 
   @Patch(':id')
-  @Roles(Role.ADMIN, Role.ENCARGADO)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateConductorDto: UpdateConductorDto,

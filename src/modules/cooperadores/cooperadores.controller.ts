@@ -28,7 +28,7 @@ export class CooperadoresController {
   constructor(private readonly cooperadoresService: CooperadoresService) {}
 
   @Post()
-  @Roles(Role.ADMIN, Role.ENCARGADO)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   create(
     @Body() createCooperadorDto: CreateCooperadorDto,
   ): Promise<Cooperador> {
@@ -54,7 +54,7 @@ export class CooperadoresController {
   }
 
   @Patch(':id')
-  @Roles(Role.ADMIN, Role.ENCARGADO)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCooperadorDto: UpdateCooperadorDto,
@@ -63,7 +63,7 @@ export class CooperadoresController {
   }
 
   @Delete(':id')
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.cooperadoresService.remove(id);

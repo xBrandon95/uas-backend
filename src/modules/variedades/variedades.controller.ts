@@ -28,7 +28,7 @@ export class VariedadesController {
   constructor(private readonly variedadesService: VariedadesService) {}
 
   @Post()
-  @Roles(Role.ADMIN, Role.ENCARGADO)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   create(@Body() createVariedadDto: CreateVariedadDto): Promise<Variedad> {
     return this.variedadesService.create(createVariedadDto);
   }
@@ -60,7 +60,7 @@ export class VariedadesController {
   }
 
   @Patch(':id')
-  @Roles(Role.ADMIN, Role.ENCARGADO)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateVariedadDto: UpdateVariedadDto,
@@ -69,7 +69,7 @@ export class VariedadesController {
   }
 
   @Delete(':id')
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.variedadesService.remove(id);

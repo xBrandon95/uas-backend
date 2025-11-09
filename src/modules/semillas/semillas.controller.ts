@@ -28,7 +28,7 @@ export class SemillasController {
   constructor(private readonly semillasService: SemillasService) {}
 
   @Post()
-  @Roles(Role.ADMIN, Role.ENCARGADO)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   create(@Body() createSemillaDto: CreateSemillaDto): Promise<Semilla> {
     return this.semillasService.create(createSemillaDto);
   }
@@ -52,7 +52,7 @@ export class SemillasController {
   }
 
   @Patch(':id')
-  @Roles(Role.ADMIN, Role.ENCARGADO)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateSemillaDto: UpdateSemillaDto,
@@ -61,13 +61,13 @@ export class SemillasController {
   }
 
   @Patch(':id/toggle-active')
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   toggleActive(@Param('id', ParseIntPipe) id: number): Promise<Semilla> {
     return this.semillasService.toggleActive(id);
   }
 
   @Delete(':id')
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.semillasService.remove(id);

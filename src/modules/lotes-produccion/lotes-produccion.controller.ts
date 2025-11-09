@@ -138,7 +138,7 @@ export class LotesProduccionController {
   }
 
   @Patch(':id')
-  @Roles(Role.ADMIN, Role.ENCARGADO)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateLoteProduccionDto: UpdateLoteProduccionDto,
@@ -147,7 +147,7 @@ export class LotesProduccionController {
   }
 
   @Patch(':id/estado')
-  @Roles(Role.ADMIN, Role.ENCARGADO)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   cambiarEstado(
     @Param('id', ParseIntPipe) id: number,
     @Body('estado') estado: string,
@@ -156,7 +156,7 @@ export class LotesProduccionController {
   }
 
   @Delete(':id')
-  @Roles(Role.ADMIN, Role.ENCARGADO)
+  @Roles(Role.ADMIN, Role.ENCARGADO, Role.OPERADOR)
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.lotesProduccionService.remove(id);
