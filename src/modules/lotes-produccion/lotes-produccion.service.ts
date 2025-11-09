@@ -266,7 +266,7 @@ export class LotesProduccionService {
   async findByOrdenIngreso(idOrdenIngreso: number): Promise<LoteProduccion[]> {
     return await this.loteProduccionRepository.find({
       where: { id_orden_ingreso: idOrdenIngreso },
-      relations: ['variedad', 'categoria_salida'],
+      relations: ['variedad', 'variedad.semilla', 'categoria_salida'],
       order: { fecha_creacion: 'DESC' },
     });
   }
