@@ -23,6 +23,7 @@ export interface LoginResponse {
     usuario: string;
     rol: Role;
     id_unidad?: number;
+    nombre_unidad?: string;
   };
 }
 

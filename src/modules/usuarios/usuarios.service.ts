@@ -86,6 +86,7 @@ export class UsuariosService {
   async findByUsername(usuario: string): Promise<Usuario | null> {
     return await this.usuarioRepository.findOne({
       where: { usuario },
+      relations: ['unidad'],
       select: [
         'id_usuario',
         'nombre',

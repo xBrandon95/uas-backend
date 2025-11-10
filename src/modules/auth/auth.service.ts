@@ -46,6 +46,7 @@ export class AuthService {
         usuario: usuario.usuario,
         rol: usuario.rol,
         id_unidad: usuario.id_unidad,
+        nombre_unidad: usuario.unidad?.nombre,
       },
     };
   }
@@ -53,11 +54,16 @@ export class AuthService {
   async register(createUsuarioDto: CreateUsuarioDto): Promise<LoginResponse> {
     const usuario = await this.usuariosService.create(createUsuarioDto);
 
+    // Cargar la relación unidad
+    const usuarioConUnidad = await this.usuariosService.findOne(
+      usuario.id_usuario,
+    );
+
     const payload: JwtPayload = {
-      sub: usuario.id_usuario,
-      usuario: usuario.usuario,
-      rol: usuario.rol,
-      id_unidad: usuario.id_unidad, // NUEVO
+      sub: usuarioConUnidad.id_usuario,
+      usuario: usuarioConUnidad.usuario,
+      rol: usuarioConUnidad.rol,
+      id_unidad: usuarioConUnidad.id_unidad,
     };
 
     return {
@@ -67,11 +73,12 @@ export class AuthService {
         expiresIn: this.configService.get('jwt.refreshExpiresIn'),
       }),
       usuario: {
-        id_usuario: usuario.id_usuario,
-        nombre: usuario.nombre,
-        usuario: usuario.usuario,
-        rol: usuario.rol,
-        id_unidad: usuario.id_unidad, // NUEVO
+        id_usuario: usuarioConUnidad.id_usuario,
+        nombre: usuarioConUnidad.nombre,
+        usuario: usuarioConUnidad.usuario,
+        rol: usuarioConUnidad.rol,
+        id_unidad: usuarioConUnidad.id_unidad,
+        nombre_unidad: usuarioConUnidad.unidad?.nombre,
       },
     };
   }
