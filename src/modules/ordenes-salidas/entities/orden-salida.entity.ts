@@ -73,6 +73,9 @@ export class OrdenSalida {
   @Column({ type: 'date' })
   fecha_salida: Date;
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  total_costo_servicio: number;
+
   @Column()
   id_unidad: number;
 

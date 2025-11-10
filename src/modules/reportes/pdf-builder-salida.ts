@@ -91,9 +91,12 @@ export class PdfBuilderSalida {
         },
         margin: [0, 0, 0, 10] as Margins,
       },
-
       {
-        text: 'Total costo servicio: ',
+        text: orden.total_costo_servicio
+          ? `Total costo servicio: Bs. ${Number(
+              orden.total_costo_servicio,
+            ).toFixed(2)}`
+          : 'Total costo servicio: ',
         bold: true,
         alignment: 'right',
         style: 'field',

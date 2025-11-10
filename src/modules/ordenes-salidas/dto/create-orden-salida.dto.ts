@@ -66,6 +66,10 @@ export class CreateOrdenSalidaDto {
   @IsOptional()
   estado?: string;
 
+  @IsNumber()
+  @IsOptional()
+  total_costo_servicio?: number;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateDetalleOrdenSalidaDto)
