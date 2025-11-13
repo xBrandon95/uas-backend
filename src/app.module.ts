@@ -19,6 +19,7 @@ import { LotesProduccionModule } from './modules/lotes-produccion/lotes-producci
 import { OrdenesSalidaModule } from './modules/ordenes-salidas/ordenes-salida.module';
 import { ReportesModule } from './modules/reportes/reportes.module';
 import { MovimientosLoteModule } from './modules/movimientos-lote/movimientos-lote.module';
+import { ServiciosModule } from './modules/servicios/servicios.module';
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { MovimientosLoteModule } from './modules/movimientos-lote/movimientos-lo
     OrdenesSalidaModule,
     ReportesModule,
     MovimientosLoteModule,
+    ServiciosModule,
   ],
   controllers: [],
   providers: [],
