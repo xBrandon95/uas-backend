@@ -4,7 +4,7 @@ import {
   IsInt,
   IsOptional,
   IsNumber,
-  // IsDateString,
+  IsDateString,
   MaxLength,
   Min,
   Max,
@@ -41,27 +41,27 @@ export class CreateOrdenIngresoDto {
   id_categoria_ingreso: number;
 
   @IsInt()
-  @IsOptional()
-  id_unidad?: number;
+  @IsNotEmpty()
+  id_unidad: number;
 
   // Información de la semilla
   @IsString()
-  @IsOptional()
+  @IsNotEmpty()
   @MaxLength(100)
-  nro_lote_campo?: string;
+  nro_lote_campo: string;
 
   @IsString()
-  @IsOptional()
+  @IsNotEmpty()
   @MaxLength(100)
-  nro_cupon?: string;
+  nro_cupon: string;
 
-  // Datos de ingreso/salida
+  // Datos de ingreso/salida - OPCIONALES
   @IsString()
   @IsOptional()
   @MaxLength(200)
   lugar_ingreso?: string;
 
-  @IsString()
+  @IsDateString()
   @IsOptional()
   hora_ingreso?: string;
 
@@ -70,67 +70,69 @@ export class CreateOrdenIngresoDto {
   @MaxLength(200)
   lugar_salida?: string;
 
-  @IsString()
+  @IsDateString()
   @IsOptional()
   hora_salida?: string;
 
   // Datos de pesaje
   @IsNumber()
-  @IsOptional()
+  @IsNotEmpty()
   @Min(0)
-  peso_bruto?: number;
+  peso_bruto: number;
 
   @IsNumber()
-  @IsOptional()
+  @IsNotEmpty()
   @Min(0)
-  peso_tara?: number;
+  peso_tara: number;
 
   @IsNumber()
-  @IsOptional()
+  @IsNotEmpty()
   @Min(0)
-  peso_neto?: number;
+  peso_neto: number;
 
   @IsNumber()
-  @IsOptional()
+  @IsNotEmpty()
   @Min(0)
-  peso_liquido?: number;
+  peso_liquido: number;
 
   // Datos de laboratorio
   @IsNumber()
-  @IsOptional()
+  @IsNotEmpty()
   @Min(0)
   @Max(100)
-  porcentaje_humedad?: number;
+  porcentaje_humedad: number;
 
   @IsNumber()
-  @IsOptional()
+  @IsNotEmpty()
   @Min(0)
   @Max(100)
-  porcentaje_impureza?: number;
+  porcentaje_impureza: number;
 
   @IsNumber()
-  @IsOptional()
+  @IsNotEmpty()
   @Min(0)
-  peso_hectolitrico?: number;
+  peso_hectolitrico: number;
 
   @IsNumber()
-  @IsOptional()
-  @Min(0)
-  @Max(100)
-  porcentaje_grano_danado?: number;
-
-  @IsNumber()
-  @IsOptional()
+  @IsNotEmpty()
   @Min(0)
   @Max(100)
-  porcentaje_grano_verde?: number;
+  porcentaje_grano_danado: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  @Min(0)
+  @Max(100)
+  porcentaje_grano_verde: number;
 
   // Observaciones
   @IsString()
   @IsOptional()
   observaciones?: string;
 
+  // Estado - opcional porque tiene default en la entidad
   @IsString()
   @IsOptional()
+  @MaxLength(50)
   estado?: string;
 }
