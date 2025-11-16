@@ -78,10 +78,10 @@ export class OrdenIngreso {
   @JoinColumn({ name: 'id_categoria_ingreso' })
   categoria_ingreso: Categoria;
 
-  @Column({ length: 100, nullable: true })
+  @Column({ length: 100 })
   nro_lote_campo: string;
 
-  @Column({ length: 100, nullable: true })
+  @Column({ length: 100 })
   nro_cupon: string;
 
   // Datos de ingreso/salida
@@ -98,32 +98,32 @@ export class OrdenIngreso {
   hora_salida: Date;
 
   // Datos de pesaje
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
   peso_bruto: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
   peso_tara: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
   peso_neto: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
   peso_liquido: number;
 
   // Datos de laboratorio
-  @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
+  @Column({ type: 'decimal', precision: 5, scale: 2 })
   porcentaje_humedad: number;
 
-  @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
+  @Column({ type: 'decimal', precision: 5, scale: 2 })
   porcentaje_impureza: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
   peso_hectolitrico: number;
 
-  @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
+  @Column({ type: 'decimal', precision: 5, scale: 2 })
   porcentaje_grano_danado: number;
 
-  @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
+  @Column({ type: 'decimal', precision: 5, scale: 2 })
   porcentaje_grano_verde: number;
 
   // Observaciones
