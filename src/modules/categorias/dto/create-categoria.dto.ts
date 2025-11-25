@@ -11,8 +11,4 @@ export class CreateCategoriaDto {
   @IsNotEmpty()
   @MaxLength(100)
   nombre: string;
-
-  @IsBoolean()
-  @IsOptional()
-  activo?: boolean;
 }
